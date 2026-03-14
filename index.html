@@ -449,6 +449,9 @@ async function planRoute(){
   if(btn){btn.disabled=false;btn.innerHTML='🗺️ Plan My Route';}
 }
 
+function dwellLabel(h){var m=Math.round(h*60);return m>=60?(m%60===0?m/60+'h':Math.floor(m/60)+'h '+m%60+'m'):m+'m';}
+function fmtTime(dec,base){var p=base.split(':').map(Number),tot=p[0]*60+p[1]+Math.round(dec*60),h=Math.floor(tot/60)%24,mn=tot%60;return (h%12||12)+':'+(mn<10?'0':'')+mn+' '+(h>=12?'PM':'AM');}
+
 // ── Google Calendar Integration ──
 var CALENDAR_SCOPES = 'https://www.googleapis.com/auth/calendar.events';
 var calendarAccessToken = '';
