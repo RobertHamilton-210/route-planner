@@ -85,7 +85,7 @@ button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600
 .progress-step { display:flex; align-items:center; gap:10px; padding:5px 0; font-size:0.82rem; }
 .progress-step .icon { width:20px; text-align:center; }
 .progress-step.active{color:#1a56db;font-weight:600;} .progress-step.done{color:#0d9f6e;} .progress-step.pending{opacity:0.45;}
-#results { display:none; }
+.cal-item { display:flex; align-items:flex-start; gap:10px; padding:10px; border:1.5px solid #e2e8f0; border-radius:8px; margin-bottom:8px; background:#fafcff; }
 .divider { border:none; border-top:1.5px solid #e2e8f0; margin:14px 0; }
 </style>
 </head>
@@ -94,6 +94,7 @@ button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600
   <h1>📍 Daily Route Planner</h1>
   <p>Priority scheduling · Google Maps TSP routing · AI-powered planning</p>
 </header>
+
 <div class="container">
 
   <div class="banner banner-green">
@@ -102,8 +103,7 @@ button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600
       <div style="font-size:0.85rem;color:#166534;background:#dcfce7;border:1.5px solid #86efac;border-radius:8px;padding:8px 12px;">API Key pre-configured — ready to use.</div>
     </div>
     <div id="apiKeyEdit" style="display:none;">
-      <input type="password" id="apiKeyInput" placeholder="Paste your Google Maps API key (AIzaSy...)​" style="margin-bottom:6px;">
-      <p style="font-size:0.75rem;color:#555;margin-bottom:8px;">🔒 Saved in your browser only — never shared.</p>
+      <input type="password" id="apiKeyInput" placeholder="Paste your Google Maps API key (AIzaSy...)" style="margin-bottom:6px;">
       <button class="btn-primary btn-sm btn-darkgreen" onclick="saveApiKey()">💾 Save API Key</button>
     </div>
     <div id="apiKeyMsg" class="msg"></div>
@@ -166,14 +166,14 @@ button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600
     <div id="progressSteps"></div>
   </div>
 
-  <div id="results">
+  <div id="results" style="display:none;">
     <div class="card">
       <h2><span class="step">4</span> Route Plan</h2>
       <div id="alertBox"></div>
       <div id="endpointSummary" style="margin-bottom:14px;"></div>
       <div class="summary-bar" id="summaryBar"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
-        <div class="section-title" style="margin:0;">✅ Visits Included Today <span style="font-weight:400;color:#718096;">(use ▲▼ buttons or drag ⠿ to reorder · times update automatically)</span></div>
+        <div class="section-title" style="margin:0;">✅ Visits Included Today <span style="font-weight:400;color:#718096;">(use ▲▼ to reorder · drag ⠿ on desktop)</span></div>
         <button class="btn-secondary btn-sm" onclick="recalcAfterReorder()">🔄 Recalculate Times</button>
       </div>
       <table class="route-table">
@@ -200,10 +200,25 @@ button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600
       </div>
     </div>
   </div>
+
+  <div id="calendarSection" style="display:none;">
+    <div class="card">
+      <h2><span class="step">5</span> Add Visits to Google Calendar</h2>
+      <p style="font-size:0.85rem;color:#4a5568;margin-bottom:14px;">Select the visits you want to add to your Google Calendar. Each event will be scheduled for the correct arrival time and dwell time window.</p>
+      <div id="calendarMsg" class="msg"></div>
+      <div id="calendarList" style="margin-bottom:16px;"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <button class="btn-primary" onclick="addToCalendar()">📅 Add Selected to Google Calendar</button>
+        <button class="btn-secondary btn-sm" onclick="selectAllCalendar()">Select All</button>
+        <button class="btn-ghost" onclick="deselectAllCalendar()">Deselect All</button>
+        <span class="copied-tag" id="calendarSuccessTag" style="display:none;">✓ Events Added!</span>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
-// Route Planner v8 — Full standalone file with Google Maps API key support
 var VISIT_TYPES = {
   "Access Issues":                 {dwell:0.25,priority:3},
   "Alarm":                         {dwell:0.25,priority:2},
@@ -249,8 +264,11 @@ var VISIT_TYPES = {
   "Winterization":                 {dwell:0.5, priority:3}
 };
 
-var savedHome='', googleApiKey='';
+var GOOGLE_MAPS_KEY  = 'AIzaSyDkbTXZN0nqgik4l1dXwaI-eex1CPmj62A';
 var GOOGLE_CLIENT_ID = '843255431399-edaat9nt102t44fcc4jrb5q7mkn2n8qu.apps.googleusercontent.com';
+var CALENDAR_SCOPE   = 'https://www.googleapis.com/auth/calendar.events';
+
+var savedHome='', calendarToken='';
 var includedVisits=[], travelTimes=[], legDistances=[], returnTravel=0, deferred=[];
 var totalDriveMins=0, totalMiles=0;
 var curStartTime='09:00', curStartAddr='', curEndAddr='';
@@ -259,66 +277,39 @@ function gid(id){return document.getElementById(id);}
 function showMsg(id,txt,type){var el=gid(id);if(!el)return;el.textContent=txt;el.className='msg msg-'+(type||'error')+' show';}
 function hideMsg(id){var el=gid(id);if(el){el.className='msg';el.textContent='';}}
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
-// ── Storage: tries localStorage first, falls back to cookies ──
-function storeSave(k, v) {
-  // Try localStorage
-  try { localStorage.setItem('rp_' + k, v); } catch(e) {}
-  // Also save as cookie (180 day expiry) as fallback
-  try {
-    var d = new Date();
-    d.setTime(d.getTime() + (180 * 24 * 60 * 60 * 1000));
-    document.cookie = 'rp_' + k + '=' + encodeURIComponent(v) + ';expires=' + d.toUTCString() + ';path=/;SameSite=Lax';
-  } catch(e) {}
+function storeSave(k,v){
+  try{localStorage.setItem('rp_'+k,v);}catch(e){}
+  try{var d=new Date();d.setTime(d.getTime()+(180*24*60*60*1000));document.cookie='rp_'+k+'='+encodeURIComponent(v)+';expires='+d.toUTCString()+';path=/;SameSite=Lax';}catch(e){}
 }
-function storeLoad(k) {
-  // Try localStorage first
-  try {
-    var v = localStorage.getItem('rp_' + k);
-    if (v) return v;
-  } catch(e) {}
-  // Fall back to cookie
-  try {
-    var name = 'rp_' + k + '=';
-    var ca = document.cookie.split(';');
-    for (var i = 0; i < ca.length; i++) {
-      var c = ca[i].trim();
-      if (c.indexOf(name) === 0) return decodeURIComponent(c.substring(name.length));
-    }
-  } catch(e) {}
+function storeLoad(k){
+  try{var v=localStorage.getItem('rp_'+k);if(v)return v;}catch(e){}
+  try{var n='rp_'+k+'=',ca=document.cookie.split(';');for(var i=0;i<ca.length;i++){var c=ca[i].trim();if(c.indexOf(n)===0)return decodeURIComponent(c.substring(n.length));}}catch(e){}
   return '';
 }
 
 function saveApiKey(){
   var val=gid('apiKeyInput').value.trim();
-  if(!val||!val.startsWith('AIza')){showMsg('apiKeyMsg','Key must start with AIza... — please check and try again.','error');return;}
-  googleApiKey=val; storeSave('apikey',val);
-  gid('apiKeyInput').value='';
-  gid('apiKeyTag').textContent='Saved ✓'; gid('apiKeyTag').className='tag tag-saved';
-  gid('apiKeyEdit').style.display='none'; gid('apiKeyDisplay').style.display='block';
+  if(!val||!val.startsWith('AIza')){showMsg('apiKeyMsg','Key must start with AIza...','error');return;}
+  GOOGLE_MAPS_KEY=val;storeSave('apikey',val);
+  gid('apiKeyTag').textContent='Saved ✓';gid('apiKeyTag').className='tag tag-saved';
+  gid('apiKeyEdit').style.display='none';gid('apiKeyDisplay').style.display='block';
   hideMsg('apiKeyMsg');
 }
-function editApiKey(){gid('apiKeyDisplay').style.display='none';gid('apiKeyEdit').style.display='block';}
-
+function editHome(){gid('homeAddrInput').value=savedHome;gid('homeDisplay').style.display='none';gid('homeEdit').style.display='block';}
 function saveHome(){
   var val=gid('homeAddrInput').value.trim();
   if(!val){showMsg('homeMsg','Please enter an address first.','error');return;}
-  savedHome=val; storeSave('home',val);
+  savedHome=val;storeSave('home',val);
   gid('homeAddrDisplay').textContent=val;
-  gid('homeStatusTag').textContent='Saved ✓'; gid('homeStatusTag').className='tag tag-saved';
-  gid('homeEdit').style.display='none'; gid('homeDisplay').style.display='block';
+  gid('homeStatusTag').textContent='Saved ✓';gid('homeStatusTag').className='tag tag-saved';
+  gid('homeEdit').style.display='none';gid('homeDisplay').style.display='block';
   hideMsg('homeMsg');
   ['startHomeDisplay','endHomeDisplay'].forEach(function(id){var el=gid(id);el.textContent=val;el.classList.remove('empty');});
 }
-function editHome(){gid('homeAddrInput').value=savedHome;gid('homeDisplay').style.display='none';gid('homeEdit').style.display='block';}
 function toggleStart(){var u=gid('startUseHome').checked;gid('startHomeDisplay').style.display=u?'block':'none';gid('startCustomWrap').style.display=u?'none':'block';}
 function toggleEnd(){var u=gid('endUseHome').checked;gid('endHomeDisplay').style.display=u?'block':'none';gid('endCustomWrap').style.display=u?'none':'block';}
 
 function loadSaved(){
-  // API key pre-embedded — no entry required
-  googleApiKey='AIzaSyDkbTXZN0nqgik4l1dXwaI-eex1CPmj62A';
-  gid('apiKeyTag').textContent='Active ✓'; gid('apiKeyTag').className='tag tag-saved';
-  gid('apiKeyEdit').style.display='none'; gid('apiKeyDisplay').style.display='block';
-
   var h=storeLoad('home');
   if(h){savedHome=h;gid('homeAddrDisplay').textContent=h;gid('homeStatusTag').textContent='Saved ✓';gid('homeStatusTag').className='tag tag-saved';gid('homeEdit').style.display='none';gid('homeDisplay').style.display='block';['startHomeDisplay','endHomeDisplay'].forEach(function(id){var el=gid(id);el.textContent=h;el.classList.remove('empty');});}
 }
@@ -346,57 +337,39 @@ function parseVisits(raw){
   return visits;
 }
 
+function selectVisitsByPriority(visits,availHours){
+  var sorted=visits.slice().sort(function(a,b){return a.priority!==b.priority?a.priority-b.priority:b.dwell-a.dwell;});
+  var included=[],deferred=[],timeUsed=0,FLAT=0.25;
+  for(var i=0;i<sorted.length;i++){
+    var v=sorted[i],travelIn=included.length===0?0:FLAT,needed=travelIn+v.dwell+FLAT;
+    if(timeUsed+needed<=availHours){timeUsed+=travelIn+v.dwell;included.push(v);}
+    else{deferred.push(v);}
+  }
+  return{included:included,deferred:deferred};
+}
+
 var STEPS=['Parse & validate visits','Select visits by priority','Google Maps: TSP route optimization','Build final schedule'];
 function showProgress(idx){
-  gid('progressCard').style.display='block';gid('results').style.display='none';
+  gid('progressCard').style.display='block';gid('results').style.display='none';gid('calendarSection').style.display='none';
   gid('progressSteps').innerHTML=STEPS.map(function(lbl,i){var cls=i<idx?'done':i===idx?'active':'pending',icon=i<idx?'✅':i===idx?'⏳':'○';return '<div class="progress-step '+cls+'"><span class="icon">'+icon+'</span>'+lbl+'</div>';}).join('');
 }
 function hideProgress(){gid('progressCard').style.display='none';}
 
-function selectVisitsByPriority(visits, availHours) {
-  // Sort strictly by priority, then by dwell descending as tiebreaker
-  var sorted = visits.slice().sort(function(a,b){
-    return a.priority !== b.priority ? a.priority - b.priority : b.dwell - a.dwell;
-  });
-
-  // Greedy selection: always pick highest priority first
-  // Use flat 0.25h travel estimate for feasibility check
-  var included = [], deferred = [];
-  var timeUsed = 0;
-  var FLAT = 0.25;
-
-  for (var i = 0; i < sorted.length; i++) {
-    var v = sorted[i];
-    var travelIn = included.length === 0 ? 0 : FLAT;
-    var travelHome = FLAT;
-    var needed = travelIn + v.dwell + travelHome;
-    if (timeUsed + needed <= availHours) {
-      timeUsed += travelIn + v.dwell;
-      included.push(v);
-    } else {
-      deferred.push(v);
-    }
-  }
-  return { included: included, deferred: deferred };
-}
-
 function gmapsOptimizeRoute(selected,startAddr,endAddr){
   return new Promise(function(resolve,reject){
     var svc=new window.google.maps.DirectionsService();
-    var waypoints=selected.map(function(v){return {location:v.address,stopover:true};});
+    var waypoints=selected.map(function(v){return{location:v.address,stopover:true};});
     svc.route({origin:startAddr,destination:endAddr,waypoints:waypoints,optimizeWaypoints:true,travelMode:window.google.maps.TravelMode.DRIVING},function(result,status){
-      if(status!=='OK'){reject(new Error('Google Maps Directions error: '+status));return;}
+      if(status!=='OK'){reject(new Error('Google Maps error: '+status));return;}
       var route=result.routes[0],order=route.waypoint_order,legs=route.legs;
       var times=legs.map(function(l){return l.duration.value/3600;});
-      var distances=legs.map(function(l){return l.distance.value/1609.34;}); // meters to miles
-      var ret=times[times.length-1];
-      var retDist=distances[distances.length-1];
-      var legTimes=times.slice(0,times.length-1);
-      var legDists=distances.slice(0,times.length-1);
+      var distances=legs.map(function(l){return l.distance.value/1609.34;});
+      var ret=times[times.length-1],retDist=distances[distances.length-1];
+      var legTimes=times.slice(0,times.length-1),legDists=distances.slice(0,times.length-1);
       var reordered=order.map(function(i){return selected[i];});
-      var totalDriveMins=Math.round(times.reduce(function(s,t){return s+t;},0)*60);
-      var totalMiles=distances.reduce(function(s,d){return s+d;},0);
-      resolve({reordered:reordered,travelTimes:legTimes,legDistances:legDists,returnTravel:ret,returnDist:retDist,totalDriveMins:totalDriveMins,totalMiles:totalMiles});
+      var totalMins=Math.round(times.reduce(function(s,t){return s+t;},0)*60);
+      var totalMi=distances.reduce(function(s,d){return s+d;},0);
+      resolve({reordered:reordered,travelTimes:legTimes,legDistances:legDists,returnTravel:ret,returnDist:retDist,totalDriveMins:totalMins,totalMiles:totalMi});
     });
   });
 }
@@ -405,7 +378,6 @@ async function planRoute(){
   hideMsg('planMsg');
   var raw=gid('visitInput').value.trim();
   if(!raw){showMsg('planMsg','Please paste your visits before planning.','error');return;}
-  if(!googleApiKey){showMsg('planMsg','Please save your Google Maps API key at the top first.','error');return;}
   if(gid('startUseHome').checked&&!savedHome){showMsg('planMsg','Please save a Home Address first.','error');return;}
   if(gid('endUseHome').checked&&!savedHome){showMsg('planMsg','Please save a Home Address first.','error');return;}
   curStartAddr=gid('startUseHome').checked?savedHome:gid('startCustomAddr').value.trim();
@@ -422,14 +394,23 @@ async function planRoute(){
   if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Planning…';}
 
   try{
-    showProgress(0); await sleep(200);
+    showProgress(0);await sleep(200);
     showProgress(1);
-    var sel = selectVisitsByPriority(visits, availHours);
-    var selected = sel.included;
-    deferred = sel.deferred;
+    var sel=selectVisitsByPriority(visits,availHours);
+    var selected=sel.included;
+    deferred=sel.deferred;
     if(!selected.length){hideProgress();showMsg('planMsg','No visits fit in your available hours.','error');if(btn){btn.disabled=false;btn.innerHTML='🗺️ Plan My Route';}return;}
 
     showProgress(2);
+    if(!window.google||!window.google.maps){
+      await new Promise(function(resolve,reject){
+        var s=document.createElement('script');
+        s.src='https://maps.googleapis.com/maps/api/js?key='+GOOGLE_MAPS_KEY;
+        s.onload=resolve;
+        s.onerror=function(){reject(new Error('Failed to load Google Maps. Check your API key.'));};
+        document.head.appendChild(s);
+      });
+    }
     var route=await gmapsOptimizeRoute(selected,curStartAddr,curEndAddr);
     includedVisits=route.reordered;
     travelTimes=route.travelTimes;
@@ -440,7 +421,7 @@ async function planRoute(){
 
     showProgress(3);await sleep(150);
     hideProgress();
-    renderResults(availHours,sel.reasoning||'');
+    renderResults(availHours);
   }catch(err){
     hideProgress();
     showMsg('planMsg','Error: '+err.message,'error');
@@ -451,130 +432,16 @@ async function planRoute(){
 
 function dwellLabel(h){var m=Math.round(h*60);return m>=60?(m%60===0?m/60+'h':Math.floor(m/60)+'h '+m%60+'m'):m+'m';}
 function fmtTime(dec,base){var p=base.split(':').map(Number),tot=p[0]*60+p[1]+Math.round(dec*60),h=Math.floor(tot/60)%24,mn=tot%60;return (h%12||12)+':'+(mn<10?'0':'')+mn+' '+(h>=12?'PM':'AM');}
-
-// ── Google Calendar Integration ──
-var CALENDAR_SCOPES = 'https://www.googleapis.com/auth/calendar.events';
-var calendarAccessToken = '';
-
-function renderCalendarSection() {
-  var sec = gid('calendarSection');
-  var list = gid('calendarList');
-  if (!includedVisits.length) { sec.style.display = 'none'; return; }
-  sec.style.display = 'block';
-  list.innerHTML = '';
-  includedVisits.forEach(function(v, i) {
-    var startStr = fmtTime(v.arrivalOffset, curStartTime);
-    var endOffset = v.arrivalOffset + v.dwell;
-    var endStr = fmtTime(endOffset, curStartTime);
-    var div = document.createElement('div');
-    div.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:10px;border:1.5px solid #e2e8f0;border-radius:8px;margin-bottom:8px;background:#fafcff;';
-    div.innerHTML =
-      '<input type="checkbox" id="calchk_'+i+'" checked style="margin-top:3px;width:16px;height:16px;accent-color:#1a56db;flex-shrink:0;">'+
-      '<label for="calchk_'+i+'" style="font-size:0.85rem;color:#1a202c;cursor:pointer;">'+
-        '<strong>'+v.address+'</strong><br>'+
-        '<span style="color:#4a5568;">'+v.visitType+' · '+startStr+' – '+endStr+' ('+dwellLabel(v.dwell)+')</span>'+
-      '</label>';
-    list.appendChild(div);
-  });
-}
-
-function selectAllCalendar() {
-  includedVisits.forEach(function(v,i){ var el=gid('calchk_'+i); if(el)el.checked=true; });
-}
-function deselectAllCalendar() {
-  includedVisits.forEach(function(v,i){ var el=gid('calchk_'+i); if(el)el.checked=false; });
-}
-
-function getCalendarDateTime(arrivalOffset, dwell, isEnd) {
-  // Build ISO 8601 datetime string from travel date + time offset
-  var base = gid('travelDate').value || new Date().toISOString().slice(0,10);
-  var parts = curStartTime.split(':').map(Number);
-  var totalMins = parts[0]*60 + parts[1] + Math.round((isEnd ? arrivalOffset + dwell : arrivalOffset) * 60);
-  var h = Math.floor(totalMins/60) % 24;
-  var m = totalMins % 60;
-  return base + 'T' + (h<10?'0':'')+h + ':' + (m<10?'0':'')+m + ':00';
-}
-
-function addToCalendar() {
-  hideMsg('calendarMsg');
-  var selected = [];
-  includedVisits.forEach(function(v,i){
-    var el = gid('calchk_'+i);
-    if (el && el.checked) selected.push({visit:v, idx:i});
-  });
-  if (!selected.length) { showMsg('calendarMsg','Please select at least one visit to add.','error'); return; }
-
-  // Load Google Identity Services and get token
-  if (!window.google || !window.google.accounts) {
-    var s = document.createElement('script');
-    s.src = 'https://accounts.google.com/gsi/client';
-    s.onload = function() { requestCalendarToken(selected); };
-    s.onerror = function() { showMsg('calendarMsg','Failed to load Google Sign-In. Please check your connection.','error'); };
-    document.head.appendChild(s);
-  } else {
-    requestCalendarToken(selected);
-  }
-}
-
-function requestCalendarToken(selected) {
-  var client = window.google.accounts.oauth2.initTokenClient({
-    client_id: GOOGLE_CLIENT_ID,
-    scope: CALENDAR_SCOPES,
-    callback: function(response) {
-      if (response.error) { showMsg('calendarMsg','Sign-in failed: ' + response.error,'error'); return; }
-      calendarAccessToken = response.access_token;
-      createCalendarEvents(selected);
-    }
-  });
-  client.requestAccessToken();
-}
-
-async function createCalendarEvents(selected) {
-  showMsg('calendarMsg','Adding events to your Google Calendar...','info');
-  var errors = 0;
-  for (var i = 0; i < selected.length; i++) {
-    var v = selected[i].visit;
-    var event = {
-      summary: v.visitType + ' — ' + v.address,
-      location: v.address,
-      description: 'Visit Type: ' + v.visitType + '\nPriority: P' + v.priority + '\nDwell Time: ' + dwellLabel(v.dwell),
-      start: { dateTime: getCalendarDateTime(v.arrivalOffset, v.dwell, false), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
-      end:   { dateTime: getCalendarDateTime(v.arrivalOffset, v.dwell, true),  timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }
-    };
-    try {
-      var resp = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + calendarAccessToken, 'Content-Type': 'application/json' },
-        body: JSON.stringify(event)
-      });
-      if (!resp.ok) errors++;
-    } catch(e) { errors++; }
-  }
-  if (errors === 0) {
-    hideMsg('calendarMsg');
-    var tag = gid('calendarSuccessTag');
-    tag.style.display = 'inline';
-    setTimeout(function(){ tag.style.display = 'none'; }, 3000);
-  } else {
-    showMsg('calendarMsg', errors + ' event(s) failed to add. Please try again.', 'error');
-  }
-}
-function fmtTime(dec,base){var p=base.split(':').map(Number),tot=p[0]*60+p[1]+Math.round(dec*60),h=Math.floor(tot/60)%24,mn=tot%60;return (h%12||12)+':'+(mn<10?'0':'')+mn+' '+(h>=12?'PM':'AM');}
 function computeArrivals(){var c=0;includedVisits.forEach(function(v,i){c+=travelTimes[i]||0;v.estArrival=fmtTime(c,curStartTime);v.arrivalOffset=c;c+=v.dwell;});}
 
-function renderResults(availHours,reasoning){
+function renderResults(availHours){
   computeArrivals();
   gid('results').style.display='block';
   var td=includedVisits.reduce(function(s,v){return s+v.dwell;},0);
   var dr=travelTimes.reduce(function(s,t){return s+t;},0)+returnTravel;
-  var tt=td+dr;
-  var p1d=deferred.filter(function(v){return v.priority===1;}).length;
-
-  // Estimated end time
-  var endTime=fmtTime(tt, curStartTime);
-
-  // Drive time formatted
-  var driveHrs=Math.floor(totalDriveMins/60), driveMins=totalDriveMins%60;
+  var tt=td+dr,p1d=deferred.filter(function(v){return v.priority===1;}).length;
+  var endTime=fmtTime(tt,curStartTime);
+  var driveHrs=Math.floor(totalDriveMins/60),driveMins=totalDriveMins%60;
   var driveLabel=driveHrs>0?driveHrs+'h '+(driveMins>0?driveMins+'m':''):driveMins+'m';
 
   gid('endpointSummary').innerHTML=
@@ -584,13 +451,12 @@ function renderResults(availHours,reasoning){
     '</div>'+
     '<div style="display:flex;gap:10px;flex-wrap:wrap;">'+
     '<div class="endpoint-row">🕐 <strong>Est. finish:</strong>&nbsp;'+endTime+'</div>'+
-    '<div class="endpoint-row">🚗 <strong>Total drive:</strong>&nbsp;'+driveLabel+' &nbsp;·&nbsp; '+totalMiles.toFixed(1)+' miles</div>'+
+    '<div class="endpoint-row">🚗 <strong>Total drive:</strong>&nbsp;'+driveLabel+'&nbsp;·&nbsp;'+totalMiles.toFixed(1)+' miles</div>'+
     '</div>';
 
   var ah=deferred.length===0
     ?'<div class="alert alert-ok">✅ All '+includedVisits.length+' visits fit in your '+availHours+'h window. Total day: <strong>'+tt.toFixed(1)+'h</strong> ('+td.toFixed(1)+'h dwell · '+dr.toFixed(1)+'h driving).</div>'
     :'<div class="alert alert-warn">⚠️ '+deferred.length+' visit'+(deferred.length>1?'s':'')+' deferred.'+(p1d>0?' <strong style="color:#b91c1c;">⚠️ '+p1d+' P1 deferred — consider extending your day.</strong>':' All P1 visits included.')+'</div>';
-  if(reasoning)ah+='<div class="alert alert-info">💬 '+reasoning+'</div>';
   gid('alertBox').innerHTML=ah;
 
   gid('summaryBar').innerHTML=
@@ -609,8 +475,8 @@ function renderTable(){
   var tb=gid('includedBody');tb.innerHTML='';
   includedVisits.forEach(function(v,i){
     var tr=document.createElement('tr');tr.className='drag-row';tr.draggable=true;tr.dataset.idx=i;
-    var upBtn=i===0?'<button disabled style="opacity:0.3;background:#e2e8f0;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;cursor:not-allowed;">▲</button>':'<button onclick="moveStop('+i+',-1)" style="background:#1a56db;color:white;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;cursor:pointer;">▲</button>';
-    var dnBtn=i===includedVisits.length-1?'<button disabled style="opacity:0.3;background:#e2e8f0;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;cursor:not-allowed;">▼</button>':'<button onclick="moveStop('+i+',1)" style="background:#1a56db;color:white;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;cursor:pointer;">▼</button>';
+    var upBtn=i===0?'<button disabled style="opacity:0.3;background:#e2e8f0;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;">▲</button>':'<button onclick="moveStop('+i+',-1)" style="background:#1a56db;color:white;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;cursor:pointer;">▲</button>';
+    var dnBtn=i===includedVisits.length-1?'<button disabled style="opacity:0.3;background:#e2e8f0;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;">▼</button>':'<button onclick="moveStop('+i+',1)" style="background:#1a56db;color:white;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;cursor:pointer;">▼</button>';
     tr.innerHTML='<td><span class="drag-handle">⠿</span></td>'+
       '<td><div style="display:flex;flex-direction:column;gap:3px;">'+upBtn+dnBtn+'</div></td>'+
       '<td><span class="order-num">'+(i+1)+'</span></td>'+
@@ -624,28 +490,31 @@ function renderTable(){
   });
 }
 
-function moveStop(idx, dir){
+function moveStop(idx,dir){
   var newIdx=idx+dir;
   if(newIdx<0||newIdx>=includedVisits.length)return;
   var mv=includedVisits.splice(idx,1)[0];includedVisits.splice(newIdx,0,mv);
   var mt=travelTimes.splice(idx,1)[0];travelTimes.splice(newIdx,0,mt);
-  computeArrivals();renderTable();updateMapsLink();
+  computeArrivals();renderTable();renderCalendarSection();updateMapsLink();
 }
+
 var dragSrc=null;
 function addDrag(row){
   row.addEventListener('dragstart',function(e){dragSrc=row;row.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
   row.addEventListener('dragend',function(){row.classList.remove('dragging');});
   row.addEventListener('dragover',function(e){e.preventDefault();document.querySelectorAll('.drag-row').forEach(function(r){r.classList.remove('drag-over');});if(row!==dragSrc)row.classList.add('drag-over');});
   row.addEventListener('dragleave',function(){row.classList.remove('drag-over');});
-  row.addEventListener('drop',function(e){e.preventDefault();row.classList.remove('drag-over');if(!dragSrc||dragSrc===row)return;var si=parseInt(dragSrc.dataset.idx),di=parseInt(row.dataset.idx),mv=includedVisits.splice(si,1)[0];includedVisits.splice(di,0,mv);var mt=travelTimes.splice(si,1)[0];travelTimes.splice(di,0,mt);renderTable();});
+  row.addEventListener('drop',function(e){e.preventDefault();row.classList.remove('drag-over');if(!dragSrc||dragSrc===row)return;var si=parseInt(dragSrc.dataset.idx),di=parseInt(row.dataset.idx),mv=includedVisits.splice(si,1)[0];includedVisits.splice(di,0,mv);var mt=travelTimes.splice(si,1)[0];travelTimes.splice(di,0,mt);computeArrivals();renderTable();renderCalendarSection();updateMapsLink();});
 }
-function recalcAfterReorder(){computeArrivals();renderTable();updateMapsLink();}
+function recalcAfterReorder(){computeArrivals();renderTable();renderCalendarSection();updateMapsLink();}
+
 function renderDeferred(){
   var sec=gid('deferredSection');if(!deferred.length){sec.style.display='none';return;}
   sec.style.display='block';
   gid('deferredAlert').textContent=deferred.length+' visit'+(deferred.length>1?'s':'')+' couldn\'t fit today. Copy below to paste into tomorrow\'s input.';
   gid('carryoverText').textContent=deferred.map(function(v){return v.address+' | '+v.visitType;}).join('\n');
 }
+
 function updateMapsLink(){
   var addrs=[curStartAddr].concat(includedVisits.map(function(v){return v.address;})).concat([curEndAddr]).filter(Boolean);
   if(addrs.length<2){gid('mapsLink').href='#';return;}
@@ -654,6 +523,101 @@ function updateMapsLink(){
   if(wps)url+='&waypoints='+wps;
   gid('mapsLink').href=url;
 }
+
+// ── Google Calendar ──
+function renderCalendarSection(){
+  var sec=gid('calendarSection');
+  var list=gid('calendarList');
+  if(!sec||!list)return;
+  if(!includedVisits.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  list.innerHTML='';
+  includedVisits.forEach(function(v,i){
+    var startStr=fmtTime(v.arrivalOffset,curStartTime);
+    var endStr=fmtTime(v.arrivalOffset+v.dwell,curStartTime);
+    var div=document.createElement('div');
+    div.className='cal-item';
+    div.innerHTML=
+      '<input type="checkbox" id="calchk_'+i+'" checked style="margin-top:3px;width:16px;height:16px;accent-color:#1a56db;flex-shrink:0;">'+
+      '<label for="calchk_'+i+'" style="font-size:0.85rem;color:#1a202c;cursor:pointer;">'+
+        '<strong>'+v.address+'</strong><br>'+
+        '<span style="color:#4a5568;">'+v.visitType+' &nbsp;·&nbsp; '+startStr+' – '+endStr+' ('+dwellLabel(v.dwell)+')</span>'+
+      '</label>';
+    list.appendChild(div);
+  });
+}
+
+function selectAllCalendar(){includedVisits.forEach(function(v,i){var el=gid('calchk_'+i);if(el)el.checked=true;});}
+function deselectAllCalendar(){includedVisits.forEach(function(v,i){var el=gid('calchk_'+i);if(el)el.checked=false;});}
+
+function getCalendarDateTime(arrivalOffset,dwell,isEnd){
+  var base=gid('travelDate').value||new Date().toISOString().slice(0,10);
+  var parts=curStartTime.split(':').map(Number);
+  var totalMins=parts[0]*60+parts[1]+Math.round((isEnd?arrivalOffset+dwell:arrivalOffset)*60);
+  var h=Math.floor(totalMins/60)%24,m=totalMins%60;
+  return base+'T'+(h<10?'0':'')+h+':'+(m<10?'0':'')+m+':00';
+}
+
+function addToCalendar(){
+  hideMsg('calendarMsg');
+  var selected=[];
+  includedVisits.forEach(function(v,i){var el=gid('calchk_'+i);if(el&&el.checked)selected.push(v);});
+  if(!selected.length){showMsg('calendarMsg','Please select at least one visit.','error');return;}
+  if(!window.google||!window.google.accounts){
+    var s=document.createElement('script');
+    s.src='https://accounts.google.com/gsi/client';
+    s.onload=function(){requestCalendarToken(selected);};
+    s.onerror=function(){showMsg('calendarMsg','Failed to load Google Sign-In. Check your connection.','error');};
+    document.head.appendChild(s);
+  } else {
+    requestCalendarToken(selected);
+  }
+}
+
+function requestCalendarToken(selected){
+  var client=window.google.accounts.oauth2.initTokenClient({
+    client_id:GOOGLE_CLIENT_ID,
+    scope:CALENDAR_SCOPE,
+    callback:function(response){
+      if(response.error){showMsg('calendarMsg','Sign-in failed: '+response.error,'error');return;}
+      calendarToken=response.access_token;
+      createCalendarEvents(selected);
+    }
+  });
+  client.requestAccessToken();
+}
+
+async function createCalendarEvents(selected){
+  showMsg('calendarMsg','Adding events to your Google Calendar...','info');
+  var tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
+  var errors=0;
+  for(var i=0;i<selected.length;i++){
+    var v=selected[i];
+    var event={
+      summary:v.visitType+' — '+v.address,
+      location:v.address,
+      description:'Visit Type: '+v.visitType+'\nPriority: P'+v.priority+'\nDwell Time: '+dwellLabel(v.dwell),
+      start:{dateTime:getCalendarDateTime(v.arrivalOffset,v.dwell,false),timeZone:tz},
+      end:{dateTime:getCalendarDateTime(v.arrivalOffset,v.dwell,true),timeZone:tz}
+    };
+    try{
+      var resp=await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events',{
+        method:'POST',
+        headers:{'Authorization':'Bearer '+calendarToken,'Content-Type':'application/json'},
+        body:JSON.stringify(event)
+      });
+      if(!resp.ok)errors++;
+    }catch(e){errors++;}
+  }
+  if(errors===0){
+    hideMsg('calendarMsg');
+    var tag=gid('calendarSuccessTag');
+    if(tag){tag.style.display='inline';setTimeout(function(){tag.style.display='none';},3000);}
+  } else {
+    showMsg('calendarMsg',errors+' event(s) failed to add. Please try again.','error');
+  }
+}
+
 function copyText(txt,tagId){navigator.clipboard.writeText(txt).then(function(){var tag=gid(tagId);if(tag){tag.style.display='inline';setTimeout(function(){tag.style.display='none';},2500);}});}
 function copyCarryover(){copyText(gid('carryoverText').textContent,'carryoverCopiedTag');}
 function copyRouteSummary(){
@@ -666,17 +630,20 @@ function loadExample(){
   gid('visitInput').value='402 Hermine Blvd, San Antonio, TX 78212 | Day One Walk\n9950 Alexa Pl, San Antonio, TX 78251 | Temperature Check\n129 Amy Aly, San Antonio, TX 78253 | Setup\n12325 Switchgrass, San Antonio, TX 78252 | Progress\n8239 Recio Oak, San Antonio, TX 78223 | In-Person Walkthrough\n16506 Paso Rio Crk, San Antonio, TX 78247 | Utilities';
   gid('startTime').value='09:00';gid('availHours').value='6.5';hideMsg('planMsg');
 }
-function clearAll(){gid('visitInput').value='';gid('results').style.display='none';includedVisits=[];travelTimes=[];deferred=[];hideMsg('planMsg');}
+function clearAll(){
+  gid('visitInput').value='';
+  gid('results').style.display='none';
+  gid('calendarSection').style.display='none';
+  includedVisits=[];travelTimes=[];deferred=[];
+  hideMsg('planMsg');
+}
 
 window.onload=function(){
   gid('travelDate').valueAsDate=new Date();
   loadSaved();
-  // Load Google Maps JS API using saved key
-  if(googleApiKey){
-    var s=document.createElement('script');
-    s.src='https://maps.googleapis.com/maps/api/js?key='+googleApiKey;
-    document.head.appendChild(s);
-  }
+  var s=document.createElement('script');
+  s.src='https://maps.googleapis.com/maps/api/js?key='+GOOGLE_MAPS_KEY;
+  document.head.appendChild(s);
 };
 </script>
 </body>
