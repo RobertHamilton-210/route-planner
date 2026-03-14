@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Route Planner</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; color: #1a202c; min-height: 100vh; }
+header { background: #1a56db; color: white; padding: 16px 24px; }
+header h1 { font-size: 1.3rem; font-weight: 700; }
+header p { font-size: 0.82rem; opacity: 0.75; margin-top: 2px; }
+.container { max-width: 980px; margin: 24px auto; padding: 0 16px 40px; }
+.card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.card h2 { font-size: 0.95rem; font-weight: 700; color: #1a56db; margin-bottom: 14px; display:flex; align-items:center; gap:8px; }
+.step { background: #1a56db; color: white; border-radius: 50%; width: 22px; height: 22px; display:inline-flex; align-items:center; justify-content:center; font-size:0.72rem; flex-shrink:0; }
+.row { display:flex; gap:12px; flex-wrap:wrap; }
+.field { flex:1; min-width:140px; }
+label { font-size:0.8rem; font-weight:600; color:#4a5568; display:block; margin-bottom:4px; }
+input[type=text], input[type=date], input[type=time], input[type=number], input[type=password], textarea {
+  width:100%; border:1.5px solid #e2e8f0; border-radius:8px; padding:8px 12px; font-size:0.88rem; outline:none; transition:border 0.2s; background:white; color:#1a202c;
+}
+input:focus, textarea:focus { border-color:#1a56db; }
+textarea { resize:vertical; min-height:160px; font-family:monospace; font-size:0.8rem; }
+.check-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.check-row input[type=checkbox] { width:16px; height:16px; accent-color:#1a56db; cursor:pointer; flex-shrink:0; }
+.check-row label { font-size:0.82rem; font-weight:600; color:#2d3748; margin:0; cursor:pointer; }
+.banner { border-radius:10px; padding:14px 16px; margin-bottom:20px; }
+.banner-blue { background:#eff6ff; border:1.5px solid #bfdbfe; }
+.banner-green { background:#f0fdf4; border:1.5px solid #86efac; }
+.banner h3 { font-size:0.88rem; font-weight:700; margin-bottom:10px; }
+.banner-blue h3 { color:#1e40af; }
+.banner-green h3 { color:#166534; }
+.tag { border-radius:12px; padding:2px 10px; font-size:0.72rem; font-weight:700; margin-left:8px; }
+.tag-saved { background:#d1fae5; color:#065f46; }
+.tag-unset { background:#fee2e2; color:#b91c1c; }
+.addr-display { font-size:0.85rem; color:#2d3748; background:#f7faff; border:1.5px solid #dbeafe; border-radius:8px; padding:8px 12px; margin-bottom:8px; min-height:36px; }
+.addr-display.empty { color:#718096; font-style:italic; }
+button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600; transition:background 0.2s; display:inline-flex; align-items:center; gap:6px; border:none; }
+.btn-primary { background:#1a56db; color:white; padding:10px 20px; font-size:0.88rem; }
+.btn-primary:hover { background:#1648c0; }
+.btn-primary:disabled { background:#93c5fd; cursor:not-allowed; }
+.btn-secondary { background:white; color:#1a56db; border:1.5px solid #1a56db !important; padding:10px 20px; font-size:0.88rem; }
+.btn-secondary:hover { background:#eef2ff; }
+.btn-sm { padding:6px 14px; font-size:0.8rem; }
+.btn-ghost { background:transparent; color:#718096; border:1.5px solid #e2e8f0 !important; padding:6px 14px; font-size:0.8rem; }
+.btn-ghost:hover { background:#f7faff; }
+.btn-green { background:#0d9f6e; color:white; padding:10px 20px; font-size:0.88rem; text-decoration:none; display:inline-flex; align-items:center; gap:6px; border-radius:8px; font-weight:600; }
+.btn-green:hover { background:#0a7f58; }
+.btn-darkgreen { background:#166534; color:white; padding:6px 14px; font-size:0.8rem; }
+.btn-darkgreen:hover { background:#14532d; }
+.badge { display:inline-block; border-radius:12px; padding:2px 8px; font-size:0.7rem; font-weight:700; }
+.p1{background:#fee2e2;color:#b91c1c;} .p2{background:#fef3c7;color:#92400e;}
+.p3{background:#dbeafe;color:#1e40af;} .p4{background:#e2e8f0;color:#4a5568;}
+.msg { padding:10px 14px; border-radius:8px; font-size:0.85rem; margin-top:8px; display:none; }
+.msg.show { display:block; }
+.msg-error { background:#fff0f0; border-left:4px solid #e53e3e; color:#c53030; }
+.msg-info  { background:#eff6ff; border-left:4px solid #3b82f6; color:#1e3a8a; }
+.alert { padding:10px 14px; border-radius:8px; font-size:0.85rem; margin-bottom:10px; }
+.alert-warn{background:#fffbeb;border-left:4px solid #f59e0b;color:#78350f;}
+.alert-ok  {background:#ecfdf5;border-left:4px solid #10b981;color:#064e3b;}
+.alert-info{background:#eff6ff;border-left:4px solid #3b82f6;color:#1e3a8a;}
+.summary-bar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+.stat { background:#f7faff; border:1.5px solid #dbeafe; border-radius:8px; padding:10px 14px; flex:1; min-width:100px; }
+.stat .val { font-size:1.3rem; font-weight:700; color:#1a56db; }
+.stat .lbl { font-size:0.72rem; color:#718096; }
+.section-title { font-size:0.78rem; font-weight:700; color:#4a5568; text-transform:uppercase; letter-spacing:0.05em; margin:16px 0 8px; }
+.route-table { width:100%; border-collapse:collapse; font-size:0.83rem; }
+.route-table th { background:#f7faff; color:#4a5568; font-weight:700; padding:8px 10px; text-align:left; border-bottom:2px solid #e2e8f0; }
+.route-table td { padding:8px 10px; border-bottom:1px solid #f0f4f8; vertical-align:middle; }
+.drag-row { cursor:grab; }
+.drag-row.dragging { opacity:0.4; }
+.drag-row.drag-over { border-top:2px solid #1a56db; }
+.drag-handle { color:#cbd5e0; font-size:1rem; padding-right:6px; cursor:grab; user-select:none; }
+.order-num { display:inline-flex; align-items:center; justify-content:center; background:#1a56db; color:white; border-radius:50%; width:20px; height:20px; font-size:0.7rem; font-weight:700; }
+.travel-chip { display:inline-block; background:#f0f4f8; border-radius:6px; padding:1px 6px; font-size:0.72rem; color:#718096; }
+.endpoint-row { display:flex; align-items:center; gap:8px; padding:8px 12px; background:#f7faff; border-radius:8px; font-size:0.82rem; color:#4a5568; flex:1; min-width:200px; }
+.carryover-box { background:#fffbeb; border:1.5px solid #f59e0b; border-radius:8px; padding:14px; margin-top:10px; }
+.carryover-box pre { font-family:monospace; font-size:0.8rem; white-space:pre-wrap; color:#78350f; margin-top:8px; }
+.copied-tag { background:#d1fae5; color:#065f46; border-radius:8px; padding:4px 10px; font-size:0.78rem; font-weight:600; display:none; margin-left:8px; }
+.spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.4); border-top-color:white; border-radius:50%; animation:spin 0.7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.progress-card { background:#eff6ff; border:1.5px solid #bfdbfe; border-radius:10px; padding:14px 16px; margin-bottom:20px; display:none; }
+.progress-card h4 { font-size:0.82rem; font-weight:700; color:#1e40af; margin-bottom:10px; }
+.progress-step { display:flex; align-items:center; gap:10px; padding:5px 0; font-size:0.82rem; }
+.progress-step .icon { width:20px; text-align:center; }
+.progress-step.active{color:#1a56db;font-weight:600;} .progress-step.done{color:#0d9f6e;} .progress-step.pending{opacity:0.45;}
+#results { display:none; }
+.divider { border:none; border-top:1.5px solid #e2e8f0; margin:14px 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>📍 Daily Route Planner</h1>
+  <p>Priority scheduling · Google Maps TSP routing · AI-powered planning</p>
+</header>
+<div class="container">
+
+  <div class="banner banner-green">
+    <h3>🔑 Google Maps API Key <span id="apiKeyTag" class="tag tag-saved">Active ✓</span></h3>
+    <div id="apiKeyDisplay">
+      <div style="font-size:0.85rem;color:#166534;background:#dcfce7;border:1.5px solid #86efac;border-radius:8px;padding:8px 12px;">API Key pre-configured — ready to use.</div>
+    </div>
+    <div id="apiKeyEdit" style="display:none;">
+      <input type="password" id="apiKeyInput" placeholder="Paste your Google Maps API key (AIzaSy...)​" style="margin-bottom:6px;">
+      <p style="font-size:0.75rem;color:#555;margin-bottom:8px;">🔒 Saved in your browser only — never shared.</p>
+      <button class="btn-primary btn-sm btn-darkgreen" onclick="saveApiKey()">💾 Save API Key</button>
+    </div>
+    <div id="apiKeyMsg" class="msg"></div>
+  </div>
+
+  <div class="banner banner-blue">
+    <h3>🏠 Home Address <span id="homeStatusTag" class="tag tag-unset">Not Set</span></h3>
+    <div id="homeMsg" class="msg"></div>
+    <div id="homeDisplay" style="display:none;">
+      <div class="addr-display" id="homeAddrDisplay"></div>
+      <button class="btn-secondary btn-sm" onclick="editHome()">✏️ Edit</button>
+    </div>
+    <div id="homeEdit">
+      <input type="text" id="homeAddrInput" placeholder="e.g. 123 Main St, San Antonio, TX" style="margin-bottom:8px;">
+      <button class="btn-primary btn-sm" onclick="saveHome()">💾 Save Home Address</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">1</span> Day Setup</h2>
+    <div class="row">
+      <div class="field"><label>Travel Date</label><input type="date" id="travelDate"></div>
+      <div class="field"><label>Start Time</label><input type="time" id="startTime" value="09:00"></div>
+      <div class="field"><label>Available Hours</label><input type="number" id="availHours" value="6.5" min="1" max="14" step="0.5"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">2</span> Start &amp; End Location</h2>
+    <div class="row" style="gap:24px;">
+      <div class="field" style="min-width:260px;">
+        <label style="margin-bottom:8px;">🟢 Starting From</label>
+        <div class="check-row"><input type="checkbox" id="startUseHome" checked onchange="toggleStart()"><label for="startUseHome">Use Home Address</label></div>
+        <div id="startHomeDisplay" class="addr-display empty">No home address saved yet</div>
+        <div id="startCustomWrap" style="display:none;"><input type="text" id="startCustomAddr" placeholder="Custom start address"></div>
+      </div>
+      <div class="field" style="min-width:260px;">
+        <label style="margin-bottom:8px;">🔴 Ending At</label>
+        <div class="check-row"><input type="checkbox" id="endUseHome" checked onchange="toggleEnd()"><label for="endUseHome">Use Home Address</label></div>
+        <div id="endHomeDisplay" class="addr-display empty">No home address saved yet</div>
+        <div id="endCustomWrap" style="display:none;"><input type="text" id="endCustomAddr" placeholder="Custom end address"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">3</span> Paste Visits from Maestro</h2>
+    <p style="font-size:0.76rem;color:#718096;margin-bottom:8px;">One visit per line: <strong>Address | Visit Type</strong> — or address and visit type on separate lines</p>
+    <textarea id="visitInput" placeholder="402 Hermine Blvd, San Antonio, TX 78212 | Day One Walk&#10;9950 Alexa Pl, San Antonio, TX 78251 | Temperature Check"></textarea>
+    <div id="planMsg" class="msg"></div>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn-primary" onclick="planRoute()">🗺️ Plan My Route</button>
+      <button class="btn-secondary btn-sm" onclick="loadExample()">Load Example</button>
+      <button class="btn-ghost" onclick="clearAll()">Clear</button>
+    </div>
+  </div>
+
+  <div class="progress-card" id="progressCard">
+    <h4>⚙️ Building your route…</h4>
+    <div id="progressSteps"></div>
+  </div>
+
+  <div id="results">
+    <div class="card">
+      <h2><span class="step">4</span> Route Plan</h2>
+      <div id="alertBox"></div>
+      <div id="endpointSummary" style="margin-bottom:14px;"></div>
+      <div class="summary-bar" id="summaryBar"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+        <div class="section-title" style="margin:0;">✅ Visits Included Today <span style="font-weight:400;color:#718096;">(use ▲▼ buttons or drag ⠿ to reorder · times update automatically)</span></div>
+        <button class="btn-secondary btn-sm" onclick="recalcAfterReorder()">🔄 Recalculate Times</button>
+      </div>
+      <table class="route-table">
+        <thead><tr><th></th><th>Move</th><th>#</th><th>Address</th><th>Visit Type</th><th>Priority</th><th>Dwell</th><th>Travel In</th><th>Est. Arrival</th></tr></thead>
+        <tbody id="includedBody"></tbody>
+      </table>
+      <div id="deferredSection" style="display:none;">
+        <div class="section-title" style="margin-top:20px;">⏭️ Deferred — Carry Forward to Next Day</div>
+        <div class="alert alert-warn" id="deferredAlert"></div>
+        <div class="carryover-box">
+          <strong style="font-size:0.82rem;">📋 Copy &amp; paste into tomorrow's visit input:</strong>
+          <pre id="carryoverText"></pre>
+          <div style="display:flex;align-items:center;margin-top:8px;gap:8px;">
+            <button class="btn-secondary btn-sm" onclick="copyCarryover()">📋 Copy to Clipboard</button>
+            <span class="copied-tag" id="carryoverCopiedTag">✓ Copied!</span>
+          </div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <a class="btn-green" id="mapsLink" href="#" target="_blank">🗺️ Open in Google Maps</a>
+        <button class="btn-secondary btn-sm" onclick="copyRouteSummary()">📋 Copy Route Summary</button>
+        <span class="copied-tag" id="routeCopiedTag">✓ Copied!</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Route Planner v8 — Full standalone file with Google Maps API key support
+var VISIT_TYPES = {
+  "Access Issues":                 {dwell:0.25,priority:3},
+  "Alarm":                         {dwell:0.25,priority:2},
+  "Bring On Market (BOM)":         {dwell:0.25,priority:2},
+  "Custom":                        {dwell:0.5, priority:2},
+  "Damage Response":               {dwell:0.25,priority:1},
+  "Day One Walk":                  {dwell:1.5, priority:1},
+  "Day One Walk Listed":           {dwell:1.5, priority:1},
+  "Day One Walk REIT Fallthrough": {dwell:1.5, priority:1},
+  "Diligence":                     {dwell:1.0, priority:1},
+  "Fallthrough Setup":             {dwell:1.0, priority:2},
+  "Final Walkthrough":             {dwell:0.25,priority:3},
+  "Floor Plan Scan":               {dwell:0.25,priority:4},
+  "HOA Violation":                 {dwell:0.25,priority:4},
+  "High Utility Usage":            {dwell:0.25,priority:4},
+  "Home Health Checkup":           {dwell:0.5, priority:3},
+  "Home Risk Change Response":     {dwell:0.5, priority:3},
+  "In-Person Walkthrough":         {dwell:0.75,priority:1},
+  "Incident Response":             {dwell:0.5, priority:2},
+  "Knox Issue":                    {dwell:0.5, priority:2},
+  "Late Checkout Walkthrough":     {dwell:0.25,priority:2},
+  "Leak":                          {dwell:0.5, priority:1},
+  "Listed Inventory Diagnostic":   {dwell:0.5, priority:4},
+  "New Listing Audit":             {dwell:0.5, priority:4},
+  "OBO Acquisition":               {dwell:0.5, priority:2},
+  "ODA Access":                    {dwell:0.5, priority:2},
+  "Post Storm Assessment":         {dwell:0.25,priority:2},
+  "Pre Storm Assessment":          {dwell:0.25,priority:2},
+  "Progress":                      {dwell:0.5, priority:4},
+  "Quality Control":               {dwell:0.5, priority:2},
+  "Quality Control Listed":        {dwell:0.5, priority:2},
+  "Reno Start":                    {dwell:0.5, priority:3},
+  "Resale Door Code Change":       {dwell:0.25,priority:2},
+  "Security":                      {dwell:0.5, priority:2},
+  "Setup":                         {dwell:1.0, priority:2},
+  "Setup External Listing":        {dwell:1.0, priority:2},
+  "SmartRent Hub Offline":         {dwell:0.5, priority:3},
+  "SmartRent Issue":               {dwell:0.5, priority:3},
+  "Take Off Market (TOM)":         {dwell:0.25,priority:4},
+  "Teardown":                      {dwell:0.5, priority:3},
+  "Temperature Check":             {dwell:0.25,priority:2},
+  "Utilities":                     {dwell:0.25,priority:4},
+  "Winterization":                 {dwell:0.5, priority:3}
+};
+
+var savedHome='', googleApiKey='';
+var includedVisits=[], travelTimes=[], legDistances=[], returnTravel=0, deferred=[];
+var totalDriveMins=0, totalMiles=0;
+var curStartTime='09:00', curStartAddr='', curEndAddr='';
+
+function gid(id){return document.getElementById(id);}
+function showMsg(id,txt,type){var el=gid(id);if(!el)return;el.textContent=txt;el.className='msg msg-'+(type||'error')+' show';}
+function hideMsg(id){var el=gid(id);if(el){el.className='msg';el.textContent='';}}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
+// ── Storage: tries localStorage first, falls back to cookies ──
+function storeSave(k, v) {
+  // Try localStorage
+  try { localStorage.setItem('rp_' + k, v); } catch(e) {}
+  // Also save as cookie (180 day expiry) as fallback
+  try {
+    var d = new Date();
+    d.setTime(d.getTime() + (180 * 24 * 60 * 60 * 1000));
+    document.cookie = 'rp_' + k + '=' + encodeURIComponent(v) + ';expires=' + d.toUTCString() + ';path=/;SameSite=Lax';
+  } catch(e) {}
+}
+function storeLoad(k) {
+  // Try localStorage first
+  try {
+    var v = localStorage.getItem('rp_' + k);
+    if (v) return v;
+  } catch(e) {}
+  // Fall back to cookie
+  try {
+    var name = 'rp_' + k + '=';
+    var ca = document.cookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+      var c = ca[i].trim();
+      if (c.indexOf(name) === 0) return decodeURIComponent(c.substring(name.length));
+    }
+  } catch(e) {}
+  return '';
+}
+
+function saveApiKey(){
+  var val=gid('apiKeyInput').value.trim();
+  if(!val||!val.startsWith('AIza')){showMsg('apiKeyMsg','Key must start with AIza... — please check and try again.','error');return;}
+  googleApiKey=val; storeSave('apikey',val);
+  gid('apiKeyInput').value='';
+  gid('apiKeyTag').textContent='Saved ✓'; gid('apiKeyTag').className='tag tag-saved';
+  gid('apiKeyEdit').style.display='none'; gid('apiKeyDisplay').style.display='block';
+  hideMsg('apiKeyMsg');
+}
+function editApiKey(){gid('apiKeyDisplay').style.display='none';gid('apiKeyEdit').style.display='block';}
+
+function saveHome(){
+  var val=gid('homeAddrInput').value.trim();
+  if(!val){showMsg('homeMsg','Please enter an address first.','error');return;}
+  savedHome=val; storeSave('home',val);
+  gid('homeAddrDisplay').textContent=val;
+  gid('homeStatusTag').textContent='Saved ✓'; gid('homeStatusTag').className='tag tag-saved';
+  gid('homeEdit').style.display='none'; gid('homeDisplay').style.display='block';
+  hideMsg('homeMsg');
+  ['startHomeDisplay','endHomeDisplay'].forEach(function(id){var el=gid(id);el.textContent=val;el.classList.remove('empty');});
+}
+function editHome(){gid('homeAddrInput').value=savedHome;gid('homeDisplay').style.display='none';gid('homeEdit').style.display='block';}
+function toggleStart(){var u=gid('startUseHome').checked;gid('startHomeDisplay').style.display=u?'block':'none';gid('startCustomWrap').style.display=u?'none':'block';}
+function toggleEnd(){var u=gid('endUseHome').checked;gid('endHomeDisplay').style.display=u?'block':'none';gid('endCustomWrap').style.display=u?'none':'block';}
+
+function loadSaved(){
+  // API key pre-embedded — no entry required
+  googleApiKey='AIzaSyDkbTXZN0nqgik4l1dXwaI-eex1CPmj62A';
+  gid('apiKeyTag').textContent='Active ✓'; gid('apiKeyTag').className='tag tag-saved';
+  gid('apiKeyEdit').style.display='none'; gid('apiKeyDisplay').style.display='block';
+
+  var h=storeLoad('home');
+  if(h){savedHome=h;gid('homeAddrDisplay').textContent=h;gid('homeStatusTag').textContent='Saved ✓';gid('homeStatusTag').className='tag tag-saved';gid('homeEdit').style.display='none';gid('homeDisplay').style.display='block';['startHomeDisplay','endHomeDisplay'].forEach(function(id){var el=gid(id);el.textContent=h;el.classList.remove('empty');});}
+}
+
+function fuzzyMatch(raw){
+  var norm=function(s){return s.toLowerCase().replace(/[^a-z0-9]/g,'');};
+  var inp=norm(raw),keys=Object.keys(VISIT_TYPES);
+  for(var i=0;i<keys.length;i++){if(norm(keys[i])===inp)return keys[i];}
+  var best=null,bestScore=0;
+  for(var i=0;i<keys.length;i++){var nk=norm(keys[i]),m=0;for(var j=0;j<inp.length-2;j++){if(nk.includes(inp.slice(j,j+3)))m++;}var s=m/Math.max(inp.length,nk.length);if(s>bestScore){bestScore=s;best=keys[i];}}
+  return bestScore>0.25?best:raw;
+}
+function isAddress(l){return /^\d+\s+\S/.test(l)&&(/,\s*[A-Z]{2}/.test(l)||/\d{5}/.test(l));}
+function isVisitType(l){return !!VISIT_TYPES[fuzzyMatch(l.trim())];}
+function parseVisits(raw){
+  var lines=raw.split('\n').map(function(l){return l.trim();}).filter(Boolean),visits=[],i=0;
+  while(i<lines.length){
+    var line=lines[i];
+    if(line.includes('|')){var idx=line.lastIndexOf('|'),addr=line.slice(0,idx).trim(),vtRaw=line.slice(idx+1).trim(),vt=fuzzyMatch(vtRaw),cfg=VISIT_TYPES[vt];if(addr&&vt)visits.push({address:addr,visitType:vt,dwell:cfg?cfg.dwell:0.5,priority:cfg?cfg.priority:3,known:!!cfg});i++;continue;}
+    if(line.includes('\t')){var parts=line.split('\t').map(function(p){return p.trim();}),vtRaw=parts[parts.length-1],addr=parts.slice(0,parts.length-1).join(' ').trim(),vt=fuzzyMatch(vtRaw),cfg=VISIT_TYPES[vt];if(addr&&vt)visits.push({address:addr,visitType:vt,dwell:cfg?cfg.dwell:0.5,priority:cfg?cfg.priority:3,known:!!cfg});i++;continue;}
+    if(isAddress(line)&&i+1<lines.length){var next=lines[i+1],vt=fuzzyMatch(next),cfg=VISIT_TYPES[vt];if(cfg){visits.push({address:line,visitType:vt,dwell:cfg.dwell,priority:cfg.priority,known:true});i+=2;continue;}}
+    if(isVisitType(line)&&i+1<lines.length){var next=lines[i+1];if(isAddress(next)){var vt=fuzzyMatch(line),cfg=VISIT_TYPES[vt];visits.push({address:next,visitType:vt,dwell:cfg?cfg.dwell:0.5,priority:cfg?cfg.priority:3,known:!!cfg});i+=2;continue;}}
+    i++;
+  }
+  return visits;
+}
+
+var STEPS=['Parse & validate visits','Select visits by priority','Google Maps: TSP route optimization','Build final schedule'];
+function showProgress(idx){
+  gid('progressCard').style.display='block';gid('results').style.display='none';
+  gid('progressSteps').innerHTML=STEPS.map(function(lbl,i){var cls=i<idx?'done':i===idx?'active':'pending',icon=i<idx?'✅':i===idx?'⏳':'○';return '<div class="progress-step '+cls+'"><span class="icon">'+icon+'</span>'+lbl+'</div>';}).join('');
+}
+function hideProgress(){gid('progressCard').style.display='none';}
+
+function selectVisitsByPriority(visits, availHours) {
+  // Sort strictly by priority, then by dwell descending as tiebreaker
+  var sorted = visits.slice().sort(function(a,b){
+    return a.priority !== b.priority ? a.priority - b.priority : b.dwell - a.dwell;
+  });
+
+  // Greedy selection: always pick highest priority first
+  // Use flat 0.25h travel estimate for feasibility check
+  var included = [], deferred = [];
+  var timeUsed = 0;
+  var FLAT = 0.25;
+
+  for (var i = 0; i < sorted.length; i++) {
+    var v = sorted[i];
+    var travelIn = included.length === 0 ? 0 : FLAT;
+    var travelHome = FLAT;
+    var needed = travelIn + v.dwell + travelHome;
+    if (timeUsed + needed <= availHours) {
+      timeUsed += travelIn + v.dwell;
+      included.push(v);
+    } else {
+      deferred.push(v);
+    }
+  }
+  return { included: included, deferred: deferred };
+}
+
+function gmapsOptimizeRoute(selected,startAddr,endAddr){
+  return new Promise(function(resolve,reject){
+    var svc=new window.google.maps.DirectionsService();
+    var waypoints=selected.map(function(v){return {location:v.address,stopover:true};});
+    svc.route({origin:startAddr,destination:endAddr,waypoints:waypoints,optimizeWaypoints:true,travelMode:window.google.maps.TravelMode.DRIVING},function(result,status){
+      if(status!=='OK'){reject(new Error('Google Maps Directions error: '+status));return;}
+      var route=result.routes[0],order=route.waypoint_order,legs=route.legs;
+      var times=legs.map(function(l){return l.duration.value/3600;});
+      var distances=legs.map(function(l){return l.distance.value/1609.34;}); // meters to miles
+      var ret=times[times.length-1];
+      var retDist=distances[distances.length-1];
+      var legTimes=times.slice(0,times.length-1);
+      var legDists=distances.slice(0,times.length-1);
+      var reordered=order.map(function(i){return selected[i];});
+      var totalDriveMins=Math.round(times.reduce(function(s,t){return s+t;},0)*60);
+      var totalMiles=distances.reduce(function(s,d){return s+d;},0);
+      resolve({reordered:reordered,travelTimes:legTimes,legDistances:legDists,returnTravel:ret,returnDist:retDist,totalDriveMins:totalDriveMins,totalMiles:totalMiles});
+    });
+  });
+}
+
+async function planRoute(){
+  hideMsg('planMsg');
+  var raw=gid('visitInput').value.trim();
+  if(!raw){showMsg('planMsg','Please paste your visits before planning.','error');return;}
+  if(!googleApiKey){showMsg('planMsg','Please save your Google Maps API key at the top first.','error');return;}
+  if(gid('startUseHome').checked&&!savedHome){showMsg('planMsg','Please save a Home Address first.','error');return;}
+  if(gid('endUseHome').checked&&!savedHome){showMsg('planMsg','Please save a Home Address first.','error');return;}
+  curStartAddr=gid('startUseHome').checked?savedHome:gid('startCustomAddr').value.trim();
+  curEndAddr=gid('endUseHome').checked?savedHome:gid('endCustomAddr').value.trim();
+  if(!curStartAddr){showMsg('planMsg','Please enter a start address.','error');return;}
+  if(!curEndAddr)curEndAddr=curStartAddr;
+  curStartTime=gid('startTime').value||'09:00';
+  var availHours=parseFloat(gid('availHours').value)||6.5;
+
+  var visits=parseVisits(raw);
+  if(!visits.length){showMsg('planMsg','Could not parse visits. Use: Address | Visit Type (one per line)','error');return;}
+
+  var btn=document.querySelector('[onclick="planRoute()"]');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Planning…';}
+
+  try{
+    showProgress(0); await sleep(200);
+    showProgress(1);
+    var sel = selectVisitsByPriority(visits, availHours);
+    var selected = sel.included;
+    deferred = sel.deferred;
+    if(!selected.length){hideProgress();showMsg('planMsg','No visits fit in your available hours.','error');if(btn){btn.disabled=false;btn.innerHTML='🗺️ Plan My Route';}return;}
+
+    showProgress(2);
+    var route=await gmapsOptimizeRoute(selected,curStartAddr,curEndAddr);
+    includedVisits=route.reordered;
+    travelTimes=route.travelTimes;
+    legDistances=route.legDistances;
+    returnTravel=route.returnTravel;
+    totalDriveMins=route.totalDriveMins;
+    totalMiles=route.totalMiles;
+
+    showProgress(3);await sleep(150);
+    hideProgress();
+    renderResults(availHours,sel.reasoning||'');
+  }catch(err){
+    hideProgress();
+    showMsg('planMsg','Error: '+err.message,'error');
+    console.error(err);
+  }
+  if(btn){btn.disabled=false;btn.innerHTML='🗺️ Plan My Route';}
+}
+
+function dwellLabel(h){var m=Math.round(h*60);return m>=60?(m%60===0?m/60+'h':Math.floor(m/60)+'h '+m%60+'m'):m+'m';}
+function fmtTime(dec,base){var p=base.split(':').map(Number),tot=p[0]*60+p[1]+Math.round(dec*60),h=Math.floor(tot/60)%24,mn=tot%60;return (h%12||12)+':'+(mn<10?'0':'')+mn+' '+(h>=12?'PM':'AM');}
+function computeArrivals(){var c=0;includedVisits.forEach(function(v,i){c+=travelTimes[i]||0;v.estArrival=fmtTime(c,curStartTime);v.arrivalOffset=c;c+=v.dwell;});}
+
+function renderResults(availHours,reasoning){
+  computeArrivals();
+  gid('results').style.display='block';
+  var td=includedVisits.reduce(function(s,v){return s+v.dwell;},0);
+  var dr=travelTimes.reduce(function(s,t){return s+t;},0)+returnTravel;
+  var tt=td+dr;
+  var p1d=deferred.filter(function(v){return v.priority===1;}).length;
+
+  // Estimated end time
+  var endTime=fmtTime(tt, curStartTime);
+
+  // Drive time formatted
+  var driveHrs=Math.floor(totalDriveMins/60), driveMins=totalDriveMins%60;
+  var driveLabel=driveHrs>0?driveHrs+'h '+(driveMins>0?driveMins+'m':''):driveMins+'m';
+
+  gid('endpointSummary').innerHTML=
+    '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">'+
+    '<div class="endpoint-row">🟢 <strong>Start:</strong>&nbsp;'+curStartAddr+'</div>'+
+    '<div class="endpoint-row">🔴 <strong>End:</strong>&nbsp;'+curEndAddr+(curStartAddr===curEndAddr?' <span style="font-size:0.72rem;color:#718096;">(round trip)</span>':'')+'</div>'+
+    '</div>'+
+    '<div style="display:flex;gap:10px;flex-wrap:wrap;">'+
+    '<div class="endpoint-row">🕐 <strong>Est. finish:</strong>&nbsp;'+endTime+'</div>'+
+    '<div class="endpoint-row">🚗 <strong>Total drive:</strong>&nbsp;'+driveLabel+' &nbsp;·&nbsp; '+totalMiles.toFixed(1)+' miles</div>'+
+    '</div>';
+
+  var ah=deferred.length===0
+    ?'<div class="alert alert-ok">✅ All '+includedVisits.length+' visits fit in your '+availHours+'h window. Total day: <strong>'+tt.toFixed(1)+'h</strong> ('+td.toFixed(1)+'h dwell · '+dr.toFixed(1)+'h driving).</div>'
+    :'<div class="alert alert-warn">⚠️ '+deferred.length+' visit'+(deferred.length>1?'s':'')+' deferred.'+(p1d>0?' <strong style="color:#b91c1c;">⚠️ '+p1d+' P1 deferred — consider extending your day.</strong>':' All P1 visits included.')+'</div>';
+  if(reasoning)ah+='<div class="alert alert-info">💬 '+reasoning+'</div>';
+  gid('alertBox').innerHTML=ah;
+
+  gid('summaryBar').innerHTML=
+    '<div class="stat"><div class="val">'+includedVisits.length+'</div><div class="lbl">Visits Today</div></div>'+
+    '<div class="stat"><div class="val">'+td.toFixed(1)+'h</div><div class="lbl">Total Dwell</div></div>'+
+    '<div class="stat"><div class="val">'+driveLabel+'</div><div class="lbl">Drive Time</div></div>'+
+    '<div class="stat"><div class="val">'+totalMiles.toFixed(1)+'</div><div class="lbl">Total Miles</div></div>'+
+    '<div class="stat"><div class="val">'+tt.toFixed(1)+'h</div><div class="lbl">Total Day</div></div>'+
+    '<div class="stat"><div class="val">'+deferred.length+'</div><div class="lbl">Deferred</div></div>';
+
+  renderTable();renderDeferred();updateMapsLink();
+  gid('results').scrollIntoView({behavior:'smooth'});
+}
+
+function renderTable(){
+  var tb=gid('includedBody');tb.innerHTML='';
+  includedVisits.forEach(function(v,i){
+    var tr=document.createElement('tr');tr.className='drag-row';tr.draggable=true;tr.dataset.idx=i;
+    var upBtn=i===0?'<button disabled style="opacity:0.3;background:#e2e8f0;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;cursor:not-allowed;">▲</button>':'<button onclick="moveStop('+i+',-1)" style="background:#1a56db;color:white;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;cursor:pointer;">▲</button>';
+    var dnBtn=i===includedVisits.length-1?'<button disabled style="opacity:0.3;background:#e2e8f0;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;cursor:not-allowed;">▼</button>':'<button onclick="moveStop('+i+',1)" style="background:#1a56db;color:white;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;cursor:pointer;">▼</button>';
+    tr.innerHTML='<td><span class="drag-handle">⠿</span></td>'+
+      '<td><div style="display:flex;flex-direction:column;gap:3px;">'+upBtn+dnBtn+'</div></td>'+
+      '<td><span class="order-num">'+(i+1)+'</span></td>'+
+      '<td style="max-width:200px;">'+v.address+(!v.known?'<br><span style="color:#e53e3e;font-size:0.7rem;">(unrecognized type)</span>':'')+'</td>'+
+      '<td>'+v.visitType+'</td>'+
+      '<td><span class="badge p'+v.priority+'">P'+v.priority+'</span></td>'+
+      '<td>'+dwellLabel(v.dwell)+'</td>'+
+      '<td>'+(i===0?'<span class="travel-chip">from start</span>':'<span class="travel-chip">~'+dwellLabel(travelTimes[i])+'</span>')+'</td>'+
+      '<td>'+v.estArrival+'</td>';
+    addDrag(tr);tb.appendChild(tr);
+  });
+}
+
+function moveStop(idx, dir){
+  var newIdx=idx+dir;
+  if(newIdx<0||newIdx>=includedVisits.length)return;
+  var mv=includedVisits.splice(idx,1)[0];includedVisits.splice(newIdx,0,mv);
+  var mt=travelTimes.splice(idx,1)[0];travelTimes.splice(newIdx,0,mt);
+  computeArrivals();renderTable();updateMapsLink();
+}
+var dragSrc=null;
+function addDrag(row){
+  row.addEventListener('dragstart',function(e){dragSrc=row;row.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+  row.addEventListener('dragend',function(){row.classList.remove('dragging');});
+  row.addEventListener('dragover',function(e){e.preventDefault();document.querySelectorAll('.drag-row').forEach(function(r){r.classList.remove('drag-over');});if(row!==dragSrc)row.classList.add('drag-over');});
+  row.addEventListener('dragleave',function(){row.classList.remove('drag-over');});
+  row.addEventListener('drop',function(e){e.preventDefault();row.classList.remove('drag-over');if(!dragSrc||dragSrc===row)return;var si=parseInt(dragSrc.dataset.idx),di=parseInt(row.dataset.idx),mv=includedVisits.splice(si,1)[0];includedVisits.splice(di,0,mv);var mt=travelTimes.splice(si,1)[0];travelTimes.splice(di,0,mt);renderTable();});
+}
+function recalcAfterReorder(){computeArrivals();renderTable();updateMapsLink();}
+function renderDeferred(){
+  var sec=gid('deferredSection');if(!deferred.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  gid('deferredAlert').textContent=deferred.length+' visit'+(deferred.length>1?'s':'')+' couldn\'t fit today. Copy below to paste into tomorrow\'s input.';
+  gid('carryoverText').textContent=deferred.map(function(v){return v.address+' | '+v.visitType;}).join('\n');
+}
+function updateMapsLink(){
+  var addrs=[curStartAddr].concat(includedVisits.map(function(v){return v.address;})).concat([curEndAddr]).filter(Boolean);
+  if(addrs.length<2){gid('mapsLink').href='#';return;}
+  var o=encodeURIComponent(addrs[0]),d=encodeURIComponent(addrs[addrs.length-1]),wps=addrs.slice(1,-1).map(function(a){return encodeURIComponent(a);}).join('|');
+  var url='https://www.google.com/maps/dir/?api=1&origin='+o+'&destination='+d+'&travelmode=driving';
+  if(wps)url+='&waypoints='+wps;
+  gid('mapsLink').href=url;
+}
+function copyText(txt,tagId){navigator.clipboard.writeText(txt).then(function(){var tag=gid(tagId);if(tag){tag.style.display='inline';setTimeout(function(){tag.style.display='none';},2500);}});}
+function copyCarryover(){copyText(gid('carryoverText').textContent,'carryoverCopiedTag');}
+function copyRouteSummary(){
+  var txt='ROUTE PLAN — '+(gid('travelDate').value||'Today')+'\nStart: '+curStartAddr+' @ '+curStartTime+'\nEnd: '+curEndAddr+'\n\n';
+  includedVisits.forEach(function(v,i){txt+=(i+1)+'. '+v.address+'\n   '+v.visitType+' | P'+v.priority+' | Dwell: '+dwellLabel(v.dwell)+' | Arrive: '+v.estArrival+'\n';});
+  if(deferred.length){txt+='\nDEFERRED:\n';deferred.forEach(function(v){txt+='  - '+v.address+' | '+v.visitType+'\n';});}
+  copyText(txt,'routeCopiedTag');
+}
+function loadExample(){
+  gid('visitInput').value='402 Hermine Blvd, San Antonio, TX 78212 | Day One Walk\n9950 Alexa Pl, San Antonio, TX 78251 | Temperature Check\n129 Amy Aly, San Antonio, TX 78253 | Setup\n12325 Switchgrass, San Antonio, TX 78252 | Progress\n8239 Recio Oak, San Antonio, TX 78223 | In-Person Walkthrough\n16506 Paso Rio Crk, San Antonio, TX 78247 | Utilities';
+  gid('startTime').value='09:00';gid('availHours').value='6.5';hideMsg('planMsg');
+}
+function clearAll(){gid('visitInput').value='';gid('results').style.display='none';includedVisits=[];travelTimes=[];deferred=[];hideMsg('planMsg');}
+
+window.onload=function(){
+  gid('travelDate').valueAsDate=new Date();
+  loadSaved();
+  // Load Google Maps JS API using saved key
+  if(googleApiKey){
+    var s=document.createElement('script');
+    s.src='https://maps.googleapis.com/maps/api/js?key='+googleApiKey;
+    document.head.appendChild(s);
+  }
+};
+</script>
+</body>
+</html>
