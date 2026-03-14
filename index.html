@@ -250,6 +250,7 @@ var VISIT_TYPES = {
 };
 
 var savedHome='', googleApiKey='';
+var GOOGLE_CLIENT_ID = '843255431399-edaat9nt102t44fcc4jrb5q7mkn2n8qu.apps.googleusercontent.com';
 var includedVisits=[], travelTimes=[], legDistances=[], returnTravel=0, deferred=[];
 var totalDriveMins=0, totalMiles=0;
 var curStartTime='09:00', curStartAddr='', curEndAddr='';
@@ -448,7 +449,113 @@ async function planRoute(){
   if(btn){btn.disabled=false;btn.innerHTML='🗺️ Plan My Route';}
 }
 
-function dwellLabel(h){var m=Math.round(h*60);return m>=60?(m%60===0?m/60+'h':Math.floor(m/60)+'h '+m%60+'m'):m+'m';}
+// ── Google Calendar Integration ──
+var CALENDAR_SCOPES = 'https://www.googleapis.com/auth/calendar.events';
+var calendarAccessToken = '';
+
+function renderCalendarSection() {
+  var sec = gid('calendarSection');
+  var list = gid('calendarList');
+  if (!includedVisits.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  list.innerHTML = '';
+  includedVisits.forEach(function(v, i) {
+    var startStr = fmtTime(v.arrivalOffset, curStartTime);
+    var endOffset = v.arrivalOffset + v.dwell;
+    var endStr = fmtTime(endOffset, curStartTime);
+    var div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:flex-start;gap:10px;padding:10px;border:1.5px solid #e2e8f0;border-radius:8px;margin-bottom:8px;background:#fafcff;';
+    div.innerHTML =
+      '<input type="checkbox" id="calchk_'+i+'" checked style="margin-top:3px;width:16px;height:16px;accent-color:#1a56db;flex-shrink:0;">'+
+      '<label for="calchk_'+i+'" style="font-size:0.85rem;color:#1a202c;cursor:pointer;">'+
+        '<strong>'+v.address+'</strong><br>'+
+        '<span style="color:#4a5568;">'+v.visitType+' · '+startStr+' – '+endStr+' ('+dwellLabel(v.dwell)+')</span>'+
+      '</label>';
+    list.appendChild(div);
+  });
+}
+
+function selectAllCalendar() {
+  includedVisits.forEach(function(v,i){ var el=gid('calchk_'+i); if(el)el.checked=true; });
+}
+function deselectAllCalendar() {
+  includedVisits.forEach(function(v,i){ var el=gid('calchk_'+i); if(el)el.checked=false; });
+}
+
+function getCalendarDateTime(arrivalOffset, dwell, isEnd) {
+  // Build ISO 8601 datetime string from travel date + time offset
+  var base = gid('travelDate').value || new Date().toISOString().slice(0,10);
+  var parts = curStartTime.split(':').map(Number);
+  var totalMins = parts[0]*60 + parts[1] + Math.round((isEnd ? arrivalOffset + dwell : arrivalOffset) * 60);
+  var h = Math.floor(totalMins/60) % 24;
+  var m = totalMins % 60;
+  return base + 'T' + (h<10?'0':'')+h + ':' + (m<10?'0':'')+m + ':00';
+}
+
+function addToCalendar() {
+  hideMsg('calendarMsg');
+  var selected = [];
+  includedVisits.forEach(function(v,i){
+    var el = gid('calchk_'+i);
+    if (el && el.checked) selected.push({visit:v, idx:i});
+  });
+  if (!selected.length) { showMsg('calendarMsg','Please select at least one visit to add.','error'); return; }
+
+  // Load Google Identity Services and get token
+  if (!window.google || !window.google.accounts) {
+    var s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.onload = function() { requestCalendarToken(selected); };
+    s.onerror = function() { showMsg('calendarMsg','Failed to load Google Sign-In. Please check your connection.','error'); };
+    document.head.appendChild(s);
+  } else {
+    requestCalendarToken(selected);
+  }
+}
+
+function requestCalendarToken(selected) {
+  var client = window.google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: CALENDAR_SCOPES,
+    callback: function(response) {
+      if (response.error) { showMsg('calendarMsg','Sign-in failed: ' + response.error,'error'); return; }
+      calendarAccessToken = response.access_token;
+      createCalendarEvents(selected);
+    }
+  });
+  client.requestAccessToken();
+}
+
+async function createCalendarEvents(selected) {
+  showMsg('calendarMsg','Adding events to your Google Calendar...','info');
+  var errors = 0;
+  for (var i = 0; i < selected.length; i++) {
+    var v = selected[i].visit;
+    var event = {
+      summary: v.visitType + ' — ' + v.address,
+      location: v.address,
+      description: 'Visit Type: ' + v.visitType + '\nPriority: P' + v.priority + '\nDwell Time: ' + dwellLabel(v.dwell),
+      start: { dateTime: getCalendarDateTime(v.arrivalOffset, v.dwell, false), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+      end:   { dateTime: getCalendarDateTime(v.arrivalOffset, v.dwell, true),  timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }
+    };
+    try {
+      var resp = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + calendarAccessToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify(event)
+      });
+      if (!resp.ok) errors++;
+    } catch(e) { errors++; }
+  }
+  if (errors === 0) {
+    hideMsg('calendarMsg');
+    var tag = gid('calendarSuccessTag');
+    tag.style.display = 'inline';
+    setTimeout(function(){ tag.style.display = 'none'; }, 3000);
+  } else {
+    showMsg('calendarMsg', errors + ' event(s) failed to add. Please try again.', 'error');
+  }
+}
 function fmtTime(dec,base){var p=base.split(':').map(Number),tot=p[0]*60+p[1]+Math.round(dec*60),h=Math.floor(tot/60)%24,mn=tot%60;return (h%12||12)+':'+(mn<10?'0':'')+mn+' '+(h>=12?'PM':'AM');}
 function computeArrivals(){var c=0;includedVisits.forEach(function(v,i){c+=travelTimes[i]||0;v.estArrival=fmtTime(c,curStartTime);v.arrivalOffset=c;c+=v.dwell;});}
 
@@ -491,7 +598,7 @@ function renderResults(availHours,reasoning){
     '<div class="stat"><div class="val">'+tt.toFixed(1)+'h</div><div class="lbl">Total Day</div></div>'+
     '<div class="stat"><div class="val">'+deferred.length+'</div><div class="lbl">Deferred</div></div>';
 
-  renderTable();renderDeferred();updateMapsLink();
+  renderTable();renderDeferred();updateMapsLink();renderCalendarSection();
   gid('results').scrollIntoView({behavior:'smooth'});
 }
 
