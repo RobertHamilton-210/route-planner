@@ -519,16 +519,13 @@ function updateMapsLink(){
   var addrs=[curStartAddr].concat(includedVisits.map(function(v){return v.address;})).concat([curEndAddr]).filter(Boolean);
   if(addrs.length<2){gid('mapsLink').href='#';return;}
 
-  // Use Google Maps URL format that shows route overview on mobile
-  // dir/ format with /data= parameter forces preview mode instead of auto-navigation
+  // Use maps.google.com (browser version) instead of google.com/maps (launches app)
+  // This keeps full route preview with all details visible on iPad
   var o=encodeURIComponent(addrs[0]);
   var d=encodeURIComponent(addrs[addrs.length-1]);
-  var wps=addrs.slice(1,-1).map(function(a){return encodeURIComponent(a);}).join('/');
-
-  // Build URL that opens route details view on iOS Google Maps app
-  var url='https://www.google.com/maps/dir/'+addrs.map(function(a){return encodeURIComponent(a);}).join('/');
-  url+='/@?entry=ttu';
-
+  var wps=addrs.slice(1,-1).map(function(a){return encodeURIComponent(a);}).join('|');
+  var url='https://maps.google.com/?saddr='+o+'&daddr='+d+'&dirflg=d';
+  if(wps) url='https://maps.google.com/maps?saddr='+o+'&daddr='+wps.split('|').concat([d]).join('+to:')+'&dirflg=d';
   gid('mapsLink').href=url;
 }
 
