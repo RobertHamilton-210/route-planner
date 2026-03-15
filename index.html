@@ -518,9 +518,17 @@ function renderDeferred(){
 function updateMapsLink(){
   var addrs=[curStartAddr].concat(includedVisits.map(function(v){return v.address;})).concat([curEndAddr]).filter(Boolean);
   if(addrs.length<2){gid('mapsLink').href='#';return;}
-  var o=encodeURIComponent(addrs[0]),d=encodeURIComponent(addrs[addrs.length-1]),wps=addrs.slice(1,-1).map(function(a){return encodeURIComponent(a);}).join('|');
-  var url='https://www.google.com/maps/dir/?api=1&origin='+o+'&destination='+d+'&travelmode=driving';
-  if(wps)url+='&waypoints='+wps;
+
+  // Use Google Maps URL format that shows route overview on mobile
+  // dir/ format with /data= parameter forces preview mode instead of auto-navigation
+  var o=encodeURIComponent(addrs[0]);
+  var d=encodeURIComponent(addrs[addrs.length-1]);
+  var wps=addrs.slice(1,-1).map(function(a){return encodeURIComponent(a);}).join('/');
+
+  // Build URL that opens route details view on iOS Google Maps app
+  var url='https://www.google.com/maps/dir/'+addrs.map(function(a){return encodeURIComponent(a);}).join('/');
+  url+='/@?entry=ttu';
+
   gid('mapsLink').href=url;
 }
 
