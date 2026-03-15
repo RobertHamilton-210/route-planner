@@ -19,13 +19,12 @@ header p { font-size: 0.82rem; opacity: 0.75; margin-top: 2px; }
 .field { flex:1; min-width:140px; }
 label { font-size:0.8rem; font-weight:600; color:#4a5568; display:block; margin-bottom:4px; }
 input[type=text], input[type=date], input[type=time], input[type=number], input[type=password], textarea {
-  width:100%; border:1.5px solid #e2e8f0; border-radius:8px; padding:8px 12px; font-size:0.88rem; outline:none; transition:border 0.2s; background:white; color:#1a202c;
+  width:100%; border:1.5px solid #e2e8f0; border-radius:8px; padding:8px 12px; font-size:0.88rem; outline:none; background:white; color:#1a202c;
 }
-input:focus, textarea:focus { border-color:#1a56db; }
 textarea { resize:vertical; min-height:160px; font-family:monospace; font-size:0.8rem; }
 .check-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-.check-row input[type=checkbox] { width:16px; height:16px; accent-color:#1a56db; cursor:pointer; flex-shrink:0; }
-.check-row label { font-size:0.82rem; font-weight:600; color:#2d3748; margin:0; cursor:pointer; }
+.check-row input[type=checkbox] { width:16px; height:16px; accent-color:#1a56db; flex-shrink:0; }
+.check-row label { font-size:0.82rem; font-weight:600; color:#2d3748; margin:0; }
 .banner { border-radius:10px; padding:14px 16px; margin-bottom:20px; }
 .banner-blue { background:#eff6ff; border:1.5px solid #bfdbfe; }
 .banner-green { background:#f0fdf4; border:1.5px solid #86efac; }
@@ -37,29 +36,23 @@ textarea { resize:vertical; min-height:160px; font-family:monospace; font-size:0
 .tag-unset { background:#fee2e2; color:#b91c1c; }
 .addr-display { font-size:0.85rem; color:#2d3748; background:#f7faff; border:1.5px solid #dbeafe; border-radius:8px; padding:8px 12px; margin-bottom:8px; min-height:36px; }
 .addr-display.empty { color:#718096; font-style:italic; }
-button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600; transition:background 0.2s; display:inline-flex; align-items:center; gap:6px; border:none; }
+button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600; display:inline-flex; align-items:center; gap:6px; border:none; }
 .btn-primary { background:#1a56db; color:white; padding:10px 20px; font-size:0.88rem; }
-.btn-primary:hover { background:#1648c0; }
-.btn-primary:disabled { background:#93c5fd; cursor:not-allowed; }
 .btn-secondary { background:white; color:#1a56db; border:1.5px solid #1a56db !important; padding:10px 20px; font-size:0.88rem; }
-.btn-secondary:hover { background:#eef2ff; }
 .btn-sm { padding:6px 14px; font-size:0.8rem; }
 .btn-ghost { background:transparent; color:#718096; border:1.5px solid #e2e8f0 !important; padding:6px 14px; font-size:0.8rem; }
-.btn-ghost:hover { background:#f7faff; }
 .btn-green { background:#0d9f6e; color:white; padding:10px 20px; font-size:0.88rem; text-decoration:none; display:inline-flex; align-items:center; gap:6px; border-radius:8px; font-weight:600; }
-.btn-green:hover { background:#0a7f58; }
 .btn-darkgreen { background:#166534; color:white; padding:6px 14px; font-size:0.8rem; }
-.btn-darkgreen:hover { background:#14532d; }
 .badge { display:inline-block; border-radius:12px; padding:2px 8px; font-size:0.7rem; font-weight:700; }
 .p1{background:#fee2e2;color:#b91c1c;} .p2{background:#fef3c7;color:#92400e;}
 .p3{background:#dbeafe;color:#1e40af;} .p4{background:#e2e8f0;color:#4a5568;}
 .msg { padding:10px 14px; border-radius:8px; font-size:0.85rem; margin-top:8px; display:none; }
 .msg.show { display:block; }
 .msg-error { background:#fff0f0; border-left:4px solid #e53e3e; color:#c53030; }
-.msg-info  { background:#eff6ff; border-left:4px solid #3b82f6; color:#1e3a8a; }
+.msg-info { background:#eff6ff; border-left:4px solid #3b82f6; color:#1e3a8a; }
 .alert { padding:10px 14px; border-radius:8px; font-size:0.85rem; margin-bottom:10px; }
 .alert-warn{background:#fffbeb;border-left:4px solid #f59e0b;color:#78350f;}
-.alert-ok  {background:#ecfdf5;border-left:4px solid #10b981;color:#064e3b;}
+.alert-ok{background:#ecfdf5;border-left:4px solid #10b981;color:#064e3b;}
 .alert-info{background:#eff6ff;border-left:4px solid #3b82f6;color:#1e3a8a;}
 .summary-bar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
 .stat { background:#f7faff; border:1.5px solid #dbeafe; border-radius:8px; padding:10px 14px; flex:1; min-width:100px; }
@@ -93,21 +86,13 @@ button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600
 <body>
 <header>
   <h1>📍 Daily Route Planner</h1>
-  <p>Priority scheduling · Google Maps TSP routing · AI-powered planning</p>
+  <p>Priority scheduling · Google Maps TSP routing · Google Calendar integration</p>
 </header>
-
 <div class="container">
 
   <div class="banner banner-green">
-    <h3>🔑 Google Maps API Key <span id="apiKeyTag" class="tag tag-saved">Active ✓</span></h3>
-    <div id="apiKeyDisplay">
-      <div style="font-size:0.85rem;color:#166534;background:#dcfce7;border:1.5px solid #86efac;border-radius:8px;padding:8px 12px;">API Key pre-configured — ready to use.</div>
-    </div>
-    <div id="apiKeyEdit" style="display:none;">
-      <input type="password" id="apiKeyInput" placeholder="Paste your Google Maps API key (AIzaSy...)" style="margin-bottom:6px;">
-      <button class="btn-primary btn-sm btn-darkgreen" onclick="saveApiKey()">💾 Save API Key</button>
-    </div>
-    <div id="apiKeyMsg" class="msg"></div>
+    <h3>🔑 Google Maps API Key <span class="tag tag-saved">Active ✓</span></h3>
+    <div style="font-size:0.85rem;color:#166534;background:#dcfce7;border:1.5px solid #86efac;border-radius:8px;padding:8px 12px;">API Key pre-configured — ready to use.</div>
   </div>
 
   <div class="banner banner-blue">
@@ -115,12 +100,11 @@ button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600
     <div id="homeMsg" class="msg"></div>
     <div id="homeDisplay" style="display:none;">
       <div class="addr-display" id="homeAddrDisplay"></div>
-      <button class="btn-secondary btn-sm" id="btnEditHome">✏️ Edit</button>
+      <button class="btn-secondary btn-sm" onclick="doEditHome()">✏️ Edit</button>
     </div>
     <div id="homeEdit">
       <input type="text" id="homeAddrInput" placeholder="e.g. 123 Main St, San Antonio, TX" style="margin-bottom:8px;">
-      <button class="btn-primary btn-sm" id="btnSaveHome" style="margin-bottom:8px;">💾 Save Home Address</button>
-      <div id="homeDiag" style="font-size:0.75rem;color:#666;margin-top:4px;"></div>
+      <button class="btn-primary btn-sm" onclick="doSaveHome()">💾 Save Home Address</button>
     </div>
   </div>
 
@@ -138,13 +122,13 @@ button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600
     <div class="row" style="gap:24px;">
       <div class="field" style="min-width:260px;">
         <label style="margin-bottom:8px;">🟢 Starting From</label>
-        <div class="check-row"><input type="checkbox" id="startUseHome" checked><label for="startUseHome">Use Home Address</label></div>
+        <div class="check-row"><input type="checkbox" id="startUseHome" checked onchange="doToggleStart()"><label for="startUseHome">Use Home Address</label></div>
         <div id="startHomeDisplay" class="addr-display empty">No home address saved yet</div>
         <div id="startCustomWrap" style="display:none;"><input type="text" id="startCustomAddr" placeholder="Custom start address"></div>
       </div>
       <div class="field" style="min-width:260px;">
         <label style="margin-bottom:8px;">🔴 Ending At</label>
-        <div class="check-row"><input type="checkbox" id="endUseHome" checked><label for="endUseHome">Use Home Address</label></div>
+        <div class="check-row"><input type="checkbox" id="endUseHome" checked onchange="doToggleEnd()"><label for="endUseHome">Use Home Address</label></div>
         <div id="endHomeDisplay" class="addr-display empty">No home address saved yet</div>
         <div id="endCustomWrap" style="display:none;"><input type="text" id="endCustomAddr" placeholder="Custom end address"></div>
       </div>
@@ -157,9 +141,9 @@ button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600
     <textarea id="visitInput" placeholder="402 Hermine Blvd, San Antonio, TX 78212 | Day One Walk&#10;9950 Alexa Pl, San Antonio, TX 78251 | Temperature Check"></textarea>
     <div id="planMsg" class="msg"></div>
     <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn-primary" id="btnPlan">🗺️ Plan My Route</button>
-      <button class="btn-secondary btn-sm" id="btnExample">Load Example</button>
-      <button class="btn-ghost" id="btnClear">Clear</button>
+      <button class="btn-primary" onclick="doPlanRoute()">🗺️ Plan My Route</button>
+      <button class="btn-secondary btn-sm" onclick="doLoadExample()">Load Example</button>
+      <button class="btn-ghost" onclick="doClearAll()">Clear</button>
     </div>
   </div>
 
@@ -175,8 +159,8 @@ button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600
       <div id="endpointSummary" style="margin-bottom:14px;"></div>
       <div class="summary-bar" id="summaryBar"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
-        <div class="section-title" style="margin:0;">✅ Visits Included Today <span style="font-weight:400;color:#718096;">(use ▲▼ to reorder · drag ⠿ on desktop)</span></div>
-        <button class="btn-secondary btn-sm" onclick="recalcAfterReorder()">🔄 Recalculate Times</button>
+        <div class="section-title" style="margin:0;">✅ Visits Included Today <span style="font-weight:400;color:#718096;">(▲▼ to reorder)</span></div>
+        <button class="btn-secondary btn-sm" onclick="doRecalc()">🔄 Recalculate Times</button>
       </div>
       <table class="route-table">
         <thead><tr><th></th><th>Move</th><th>#</th><th>Address</th><th>Visit Type</th><th>Priority</th><th>Dwell</th><th>Travel In</th><th>Est. Arrival</th></tr></thead>
@@ -189,7 +173,7 @@ button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600
           <strong style="font-size:0.82rem;">📋 Copy &amp; paste into tomorrow's visit input:</strong>
           <pre id="carryoverText"></pre>
           <div style="display:flex;align-items:center;margin-top:8px;gap:8px;">
-            <button class="btn-secondary btn-sm" onclick="copyCarryover()">📋 Copy to Clipboard</button>
+            <button class="btn-secondary btn-sm" onclick="doCopyCarryover()">📋 Copy to Clipboard</button>
             <span class="copied-tag" id="carryoverCopiedTag">✓ Copied!</span>
           </div>
         </div>
@@ -201,7 +185,7 @@ button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600
       <hr class="divider">
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <a class="btn-green" id="mapsLink" href="#" target="_blank">🗺️ Open in Google Maps</a>
-        <button class="btn-secondary btn-sm" onclick="copyRouteSummary()">📋 Copy Route Summary</button>
+        <button class="btn-secondary btn-sm" onclick="doCopyRoute()">📋 Copy Route Summary</button>
         <span class="copied-tag" id="routeCopiedTag">✓ Copied!</span>
       </div>
     </div>
@@ -210,13 +194,13 @@ button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600
   <div id="calendarSection" style="display:none;">
     <div class="card">
       <h2><span class="step">5</span> Add Visits to Google Calendar</h2>
-      <p style="font-size:0.85rem;color:#4a5568;margin-bottom:14px;">Select the visits you want to add to your Google Calendar. Each event will be scheduled for the correct arrival time and dwell time window.</p>
+      <p style="font-size:0.85rem;color:#4a5568;margin-bottom:14px;">Select visits to add to your Google Calendar. Each event will be scheduled for the correct arrival time and dwell time window.</p>
       <div id="calendarMsg" class="msg"></div>
       <div id="calendarList" style="margin-bottom:16px;"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <button class="btn-primary" onclick="addToCalendar()">📅 Add Selected to Google Calendar</button>
-        <button class="btn-secondary btn-sm" onclick="selectAllCalendar()">Select All</button>
-        <button class="btn-ghost" onclick="deselectAllCalendar()">Deselect All</button>
+        <button class="btn-primary" onclick="doAddToCalendar()">📅 Add Selected to Google Calendar</button>
+        <button class="btn-secondary btn-sm" onclick="doSelectAllCal()">Select All</button>
+        <button class="btn-ghost" onclick="doDeselectAllCal()">Deselect All</button>
         <span class="copied-tag" id="calendarSuccessTag" style="display:none;">✓ Events Added!</span>
       </div>
     </div>
@@ -225,61 +209,95 @@ button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600
 </div>
 
 <script>
+// ── All global onclick handler functions defined first ──
+function doSaveHome() {
+  var val = document.getElementById('homeAddrInput').value.trim();
+  if (!val) { showMsg('homeMsg', 'Please enter an address first.', 'error'); return; }
+  savedHome = val;
+  storeSave('home', val);
+  document.getElementById('homeAddrDisplay').textContent = val;
+  document.getElementById('homeStatusTag').textContent = 'Saved ✓';
+  document.getElementById('homeStatusTag').className = 'tag tag-saved';
+  document.getElementById('homeEdit').style.display = 'none';
+  document.getElementById('homeDisplay').style.display = 'block';
+  hideMsg('homeMsg');
+  ['startHomeDisplay','endHomeDisplay'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.textContent = val; el.classList.remove('empty'); }
+  });
+}
+function doEditHome() {
+  document.getElementById('homeAddrInput').value = savedHome;
+  document.getElementById('homeDisplay').style.display = 'none';
+  document.getElementById('homeEdit').style.display = 'block';
+}
+function doToggleStart() {
+  var u = document.getElementById('startUseHome').checked;
+  document.getElementById('startHomeDisplay').style.display = u ? 'block' : 'none';
+  document.getElementById('startCustomWrap').style.display = u ? 'none' : 'block';
+}
+function doToggleEnd() {
+  var u = document.getElementById('endUseHome').checked;
+  document.getElementById('endHomeDisplay').style.display = u ? 'block' : 'none';
+  document.getElementById('endCustomWrap').style.display = u ? 'none' : 'block';
+}
+function doPlanRoute() { planRoute(); }
+function doLoadExample() { loadExample(); }
+function doClearAll() { clearAll(); }
+function doRecalc() { computeArrivals(); renderTable(); renderCalendarSection(); renderRouteDetail(); updateMapsLink(); }
+function doCopyCarryover() { copyText(document.getElementById('carryoverText').textContent, 'carryoverCopiedTag'); }
+function doCopyRoute() {
+  var txt = 'ROUTE PLAN — ' + (document.getElementById('travelDate').value || 'Today') + '\nStart: ' + curStartAddr + ' @ ' + curStartTime + '\nEnd: ' + curEndAddr + '\n\n';
+  includedVisits.forEach(function(v, i) { txt += (i+1) + '. ' + v.address + '\n   ' + v.visitType + ' | P' + v.priority + ' | Dwell: ' + dwellLabel(v.dwell) + ' | Arrive: ' + v.estArrival + '\n'; });
+  if (deferred.length) { txt += '\nDEFERRED:\n'; deferred.forEach(function(v) { txt += '  - ' + v.address + ' | ' + v.visitType + '\n'; }); }
+  copyText(txt, 'routeCopiedTag');
+}
+function doAddToCalendar() { addToCalendar(); }
+function doSelectAllCal() { includedVisits.forEach(function(v,i){var el=document.getElementById('calchk_'+i);if(el)el.checked=true;}); }
+function doDeselectAllCal() { includedVisits.forEach(function(v,i){var el=document.getElementById('calchk_'+i);if(el)el.checked=false;}); }
+function moveStop(idx, dir) {
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= includedVisits.length) return;
+  var mv = includedVisits.splice(idx,1)[0]; includedVisits.splice(newIdx,0,mv);
+  var mt = travelTimes.splice(idx,1)[0]; travelTimes.splice(newIdx,0,mt);
+  computeArrivals(); renderTable(); renderCalendarSection(); renderRouteDetail(); updateMapsLink();
+}
+
+// ── Visit types ──
 var VISIT_TYPES = {
-  "Access Issues":                 {dwell:0.25,priority:3},
-  "Alarm":                         {dwell:0.25,priority:2},
-  "Bring On Market (BOM)":         {dwell:0.25,priority:2},
-  "Custom":                        {dwell:0.5, priority:2},
-  "Damage Response":               {dwell:0.25,priority:1},
-  "Day One Walk":                  {dwell:1.5, priority:1},
-  "Day One Walk Listed":           {dwell:1.5, priority:1},
-  "Day One Walk REIT Fallthrough": {dwell:1.5, priority:1},
-  "Diligence":                     {dwell:1.0, priority:1},
-  "Fallthrough Setup":             {dwell:1.0, priority:2},
-  "Final Walkthrough":             {dwell:0.25,priority:3},
-  "Floor Plan Scan":               {dwell:0.25,priority:4},
-  "HOA Violation":                 {dwell:0.25,priority:4},
-  "High Utility Usage":            {dwell:0.25,priority:4},
-  "Home Health Checkup":           {dwell:0.5, priority:3},
-  "Home Risk Change Response":     {dwell:0.5, priority:3},
-  "In-Person Walkthrough":         {dwell:0.75,priority:1},
-  "Incident Response":             {dwell:0.5, priority:2},
-  "Knox Issue":                    {dwell:0.5, priority:2},
-  "Late Checkout Walkthrough":     {dwell:0.25,priority:2},
-  "Leak":                          {dwell:0.5, priority:1},
-  "Listed Inventory Diagnostic":   {dwell:0.5, priority:4},
-  "New Listing Audit":             {dwell:0.5, priority:4},
-  "OBO Acquisition":               {dwell:0.5, priority:2},
-  "ODA Access":                    {dwell:0.5, priority:2},
-  "Post Storm Assessment":         {dwell:0.25,priority:2},
-  "Pre Storm Assessment":          {dwell:0.25,priority:2},
-  "Progress":                      {dwell:0.5, priority:4},
-  "Quality Control":               {dwell:0.5, priority:2},
-  "Quality Control Listed":        {dwell:0.5, priority:2},
-  "Reno Start":                    {dwell:0.5, priority:3},
-  "Resale Door Code Change":       {dwell:0.25,priority:2},
-  "Security":                      {dwell:0.5, priority:2},
-  "Setup":                         {dwell:1.0, priority:2},
-  "Setup External Listing":        {dwell:1.0, priority:2},
-  "SmartRent Hub Offline":         {dwell:0.5, priority:3},
-  "SmartRent Issue":               {dwell:0.5, priority:3},
-  "Take Off Market (TOM)":         {dwell:0.25,priority:4},
-  "Teardown":                      {dwell:0.5, priority:3},
-  "Temperature Check":             {dwell:0.25,priority:2},
-  "Utilities":                     {dwell:0.25,priority:4},
-  "Winterization":                 {dwell:0.5, priority:3}
+  "Access Issues":{dwell:0.25,priority:3},"Alarm":{dwell:0.25,priority:2},
+  "Bring On Market (BOM)":{dwell:0.25,priority:2},"Custom":{dwell:0.5,priority:2},
+  "Damage Response":{dwell:0.25,priority:1},"Day One Walk":{dwell:1.5,priority:1},
+  "Day One Walk Listed":{dwell:1.5,priority:1},"Day One Walk REIT Fallthrough":{dwell:1.5,priority:1},
+  "Diligence":{dwell:1.0,priority:1},"Fallthrough Setup":{dwell:1.0,priority:2},
+  "Final Walkthrough":{dwell:0.25,priority:3},"Floor Plan Scan":{dwell:0.25,priority:4},
+  "HOA Violation":{dwell:0.25,priority:4},"High Utility Usage":{dwell:0.25,priority:4},
+  "Home Health Checkup":{dwell:0.5,priority:3},"Home Risk Change Response":{dwell:0.5,priority:3},
+  "In-Person Walkthrough":{dwell:0.75,priority:1},"Incident Response":{dwell:0.5,priority:2},
+  "Knox Issue":{dwell:0.5,priority:2},"Late Checkout Walkthrough":{dwell:0.25,priority:2},
+  "Leak":{dwell:0.5,priority:1},"Listed Inventory Diagnostic":{dwell:0.5,priority:4},
+  "New Listing Audit":{dwell:0.5,priority:4},"OBO Acquisition":{dwell:0.5,priority:2},
+  "ODA Access":{dwell:0.5,priority:2},"Post Storm Assessment":{dwell:0.25,priority:2},
+  "Pre Storm Assessment":{dwell:0.25,priority:2},"Progress":{dwell:0.5,priority:4},
+  "Quality Control":{dwell:0.5,priority:2},"Quality Control Listed":{dwell:0.5,priority:2},
+  "Reno Start":{dwell:0.5,priority:3},"Resale Door Code Change":{dwell:0.25,priority:2},
+  "Security":{dwell:0.5,priority:2},"Setup":{dwell:1.0,priority:2},
+  "Setup External Listing":{dwell:1.0,priority:2},"SmartRent Hub Offline":{dwell:0.5,priority:3},
+  "SmartRent Issue":{dwell:0.5,priority:3},"Take Off Market (TOM)":{dwell:0.25,priority:4},
+  "Teardown":{dwell:0.5,priority:3},"Temperature Check":{dwell:0.25,priority:2},
+  "Utilities":{dwell:0.25,priority:4},"Winterization":{dwell:0.5,priority:3}
 };
 
-var GOOGLE_MAPS_KEY  = 'AIzaSyDkbTXZN0nqgik4l1dXwaI-eex1CPmj62A';
+// ── Constants & state ──
 var GOOGLE_CLIENT_ID = '843255431399-edaat9nt102t44fcc4jrb5q7mkn2n8qu.apps.googleusercontent.com';
-var CALENDAR_SCOPE   = 'https://www.googleapis.com/auth/calendar.events';
+var CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+var savedHome = '', calendarToken = '';
+var includedVisits = [], travelTimes = [], legDistances = [], returnTravel = 0, deferred = [];
+var totalDriveMins = 0, totalMiles = 0;
+var curStartTime = '09:00', curStartAddr = '', curEndAddr = '';
 
-var savedHome='', calendarToken='';
-var includedVisits=[], travelTimes=[], legDistances=[], returnTravel=0, deferred=[];
-var totalDriveMins=0, totalMiles=0;
-var curStartTime='09:00', curStartAddr='', curEndAddr='';
-
-function gid(id){return document.getElementById(id);}
+// ── Helpers ──
+function gid(id) { return document.getElementById(id); }
 function showMsg(id,txt,type){var el=gid(id);if(!el)return;el.textContent=txt;el.className='msg msg-'+(type||'error')+' show';}
 function hideMsg(id){var el=gid(id);if(el){el.className='msg';el.textContent='';}}
 function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
@@ -292,34 +310,26 @@ function storeLoad(k){
   try{var n='rp_'+k+'=',ca=document.cookie.split(';');for(var i=0;i<ca.length;i++){var c=ca[i].trim();if(c.indexOf(n)===0)return decodeURIComponent(c.substring(n.length));}}catch(e){}
   return '';
 }
-
-function saveApiKey(){
-  var val=gid('apiKeyInput').value.trim();
-  if(!val||!val.startsWith('AIza')){showMsg('apiKeyMsg','Key must start with AIza...','error');return;}
-  GOOGLE_MAPS_KEY=val;storeSave('apikey',val);
-  gid('apiKeyTag').textContent='Saved ✓';gid('apiKeyTag').className='tag tag-saved';
-  gid('apiKeyEdit').style.display='none';gid('apiKeyDisplay').style.display='block';
-  hideMsg('apiKeyMsg');
+function dwellLabel(h){var m=Math.round(h*60);return m>=60?(m%60===0?m/60+'h':Math.floor(m/60)+'h '+m%60+'m'):m+'m';}
+function fmtTime(dec,base){var p=base.split(':').map(Number),tot=p[0]*60+p[1]+Math.round(dec*60),h=Math.floor(tot/60)%24,mn=tot%60;return (h%12||12)+':'+(mn<10?'0':'')+mn+' '+(h>=12?'PM':'AM');}
+function copyText(txt,tagId){
+  try{navigator.clipboard.writeText(txt).then(function(){var t=gid(tagId);if(t){t.style.display='inline';setTimeout(function(){t.style.display='none';},2500);}});}
+  catch(e){}
 }
-function editHome(){gid('homeAddrInput').value=savedHome;gid('homeDisplay').style.display='none';gid('homeEdit').style.display='block';}
-function saveHome(){
-  var val=gid('homeAddrInput').value.trim();
-  if(!val){showMsg('homeMsg','Please enter an address first.','error');return;}
-  savedHome=val;storeSave('home',val);
-  gid('homeAddrDisplay').textContent=val;
-  gid('homeStatusTag').textContent='Saved ✓';gid('homeStatusTag').className='tag tag-saved';
-  gid('homeEdit').style.display='none';gid('homeDisplay').style.display='block';
-  hideMsg('homeMsg');
-  ['startHomeDisplay','endHomeDisplay'].forEach(function(id){var el=gid(id);el.textContent=val;el.classList.remove('empty');});
-}
-function toggleStart(){var u=gid('startUseHome').checked;gid('startHomeDisplay').style.display=u?'block':'none';gid('startCustomWrap').style.display=u?'none':'block';}
-function toggleEnd(){var u=gid('endUseHome').checked;gid('endHomeDisplay').style.display=u?'block':'none';gid('endCustomWrap').style.display=u?'none':'block';}
 
+// ── Load saved ──
 function loadSaved(){
   var h=storeLoad('home');
-  if(h){savedHome=h;gid('homeAddrDisplay').textContent=h;gid('homeStatusTag').textContent='Saved ✓';gid('homeStatusTag').className='tag tag-saved';gid('homeEdit').style.display='none';gid('homeDisplay').style.display='block';['startHomeDisplay','endHomeDisplay'].forEach(function(id){var el=gid(id);el.textContent=h;el.classList.remove('empty');});}
+  if(h){
+    savedHome=h;
+    gid('homeAddrDisplay').textContent=h;
+    gid('homeStatusTag').textContent='Saved ✓';gid('homeStatusTag').className='tag tag-saved';
+    gid('homeEdit').style.display='none';gid('homeDisplay').style.display='block';
+    ['startHomeDisplay','endHomeDisplay'].forEach(function(id){var el=gid(id);if(el){el.textContent=h;el.classList.remove('empty');}});
+  }
 }
 
+// ── Parse visits ──
 function fuzzyMatch(raw){
   var norm=function(s){return s.toLowerCase().replace(/[^a-z0-9]/g,'');};
   var inp=norm(raw),keys=Object.keys(VISIT_TYPES);
@@ -343,47 +353,49 @@ function parseVisits(raw){
   return visits;
 }
 
-function selectVisitsByPriority(visits,availHours){
+// ── Priority selection ──
+function selectByPriority(visits,availHours){
   var sorted=visits.slice().sort(function(a,b){return a.priority!==b.priority?a.priority-b.priority:b.dwell-a.dwell;});
-  var included=[],deferred=[],timeUsed=0,FLAT=0.25;
-  for(var i=0;i<sorted.length;i++){
-    var v=sorted[i],travelIn=included.length===0?0:FLAT,needed=travelIn+v.dwell+FLAT;
-    if(timeUsed+needed<=availHours){timeUsed+=travelIn+v.dwell;included.push(v);}
-    else{deferred.push(v);}
-  }
-  return{included:included,deferred:deferred};
+  var inc=[],def=[],used=0,F=0.25;
+  for(var i=0;i<sorted.length;i++){var v=sorted[i],ti=inc.length===0?0:F,need=ti+v.dwell+F;if(used+need<=availHours){used+=ti+v.dwell;inc.push(v);}else{def.push(v);}}
+  return{included:inc,deferred:def};
 }
 
-var STEPS=['Parse & validate visits','Select visits by priority','Google Maps: TSP route optimization','Build final schedule'];
+// ── Progress ──
+var STEPS=['Parse & validate','Select by priority','Google Maps routing','Build schedule'];
 function showProgress(idx){
   gid('progressCard').style.display='block';gid('results').style.display='none';gid('calendarSection').style.display='none';
   gid('progressSteps').innerHTML=STEPS.map(function(lbl,i){var cls=i<idx?'done':i===idx?'active':'pending',icon=i<idx?'✅':i===idx?'⏳':'○';return '<div class="progress-step '+cls+'"><span class="icon">'+icon+'</span>'+lbl+'</div>';}).join('');
 }
 function hideProgress(){gid('progressCard').style.display='none';}
 
-function gmapsOptimizeRoute(selected,startAddr,endAddr){
+// ── Google Maps routing ──
+function gmapsRoute(selected,startAddr,endAddr){
   return new Promise(function(resolve,reject){
     var svc=new window.google.maps.DirectionsService();
-    var waypoints=selected.map(function(v){return{location:v.address,stopover:true};});
-    svc.route({origin:startAddr,destination:endAddr,waypoints:waypoints,optimizeWaypoints:true,travelMode:window.google.maps.TravelMode.DRIVING},function(result,status){
+    svc.route({origin:startAddr,destination:endAddr,waypoints:selected.map(function(v){return{location:v.address,stopover:true};}),optimizeWaypoints:true,travelMode:window.google.maps.TravelMode.DRIVING},function(result,status){
       if(status!=='OK'){reject(new Error('Google Maps error: '+status));return;}
       var route=result.routes[0],order=route.waypoint_order,legs=route.legs;
       var times=legs.map(function(l){return l.duration.value/3600;});
-      var distances=legs.map(function(l){return l.distance.value/1609.34;});
-      var ret=times[times.length-1],retDist=distances[distances.length-1];
-      var legTimes=times.slice(0,times.length-1),legDists=distances.slice(0,times.length-1);
-      var reordered=order.map(function(i){return selected[i];});
-      var totalMins=Math.round(times.reduce(function(s,t){return s+t;},0)*60);
-      var totalMi=distances.reduce(function(s,d){return s+d;},0);
-      resolve({reordered:reordered,travelTimes:legTimes,legDistances:legDists,returnTravel:ret,returnDist:retDist,totalDriveMins:totalMins,totalMiles:totalMi});
+      var dists=legs.map(function(l){return l.distance.value/1609.34;});
+      resolve({
+        reordered:order.map(function(i){return selected[i];}),
+        travelTimes:times.slice(0,times.length-1),
+        legDistances:dists.slice(0,dists.length-1),
+        returnTravel:times[times.length-1],
+        returnDist:dists[dists.length-1],
+        totalDriveMins:Math.round(times.reduce(function(s,t){return s+t;},0)*60),
+        totalMiles:dists.reduce(function(s,d){return s+d;},0)
+      });
     });
   });
 }
 
+// ── Plan route ──
 async function planRoute(){
   hideMsg('planMsg');
   var raw=gid('visitInput').value.trim();
-  if(!raw){showMsg('planMsg','Please paste your visits before planning.','error');return;}
+  if(!raw){showMsg('planMsg','Please paste your visits first.','error');return;}
   if(gid('startUseHome').checked&&!savedHome){showMsg('planMsg','Please save a Home Address first.','error');return;}
   if(gid('endUseHome').checked&&!savedHome){showMsg('planMsg','Please save a Home Address first.','error');return;}
   curStartAddr=gid('startUseHome').checked?savedHome:gid('startCustomAddr').value.trim();
@@ -392,52 +404,38 @@ async function planRoute(){
   if(!curEndAddr)curEndAddr=curStartAddr;
   curStartTime=gid('startTime').value||'09:00';
   var availHours=parseFloat(gid('availHours').value)||6.5;
-
   var visits=parseVisits(raw);
-  if(!visits.length){showMsg('planMsg','Could not parse visits. Use: Address | Visit Type (one per line)','error');return;}
+  if(!visits.length){showMsg('planMsg','Could not parse visits. Use: Address | Visit Type','error');return;}
 
-  var btn=document.querySelector('[onclick="planRoute()"]');
-  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Planning…';}
+  var planBtn=document.querySelector('[onclick="doPlanRoute()"]');
+  if(planBtn){planBtn.disabled=true;planBtn.innerHTML='<span class="spinner"></span> Planning…';}
 
   try{
     showProgress(0);await sleep(200);
     showProgress(1);
-    var sel=selectVisitsByPriority(visits,availHours);
+    var sel=selectByPriority(visits,availHours);
     var selected=sel.included;
     deferred=sel.deferred;
-    if(!selected.length){hideProgress();showMsg('planMsg','No visits fit in your available hours.','error');if(btn){btn.disabled=false;btn.innerHTML='🗺️ Plan My Route';}return;}
-
+    if(!selected.length){hideProgress();showMsg('planMsg','No visits fit in your available hours.','error');if(planBtn){planBtn.disabled=false;planBtn.innerHTML='🗺️ Plan My Route';}return;}
     showProgress(2);
-    if(!window.google||!window.google.maps){
-      await new Promise(function(resolve,reject){
-        var s=document.createElement('script');
-        s.src='https://maps.googleapis.com/maps/api/js?key='+GOOGLE_MAPS_KEY;
-        s.onload=resolve;
-        s.onerror=function(){reject(new Error('Failed to load Google Maps. Check your API key.'));};
-        document.head.appendChild(s);
-      });
-    }
-    var route=await gmapsOptimizeRoute(selected,curStartAddr,curEndAddr);
+    var route=await gmapsRoute(selected,curStartAddr,curEndAddr);
     includedVisits=route.reordered;
     travelTimes=route.travelTimes;
     legDistances=route.legDistances;
     returnTravel=route.returnTravel;
     totalDriveMins=route.totalDriveMins;
     totalMiles=route.totalMiles;
-
     showProgress(3);await sleep(150);
     hideProgress();
     renderResults(availHours);
   }catch(err){
     hideProgress();
     showMsg('planMsg','Error: '+err.message,'error');
-    console.error(err);
   }
-  if(btn){btn.disabled=false;btn.innerHTML='🗺️ Plan My Route';}
+  if(planBtn){planBtn.disabled=false;planBtn.innerHTML='🗺️ Plan My Route';}
 }
 
-function dwellLabel(h){var m=Math.round(h*60);return m>=60?(m%60===0?m/60+'h':Math.floor(m/60)+'h '+m%60+'m'):m+'m';}
-function fmtTime(dec,base){var p=base.split(':').map(Number),tot=p[0]*60+p[1]+Math.round(dec*60),h=Math.floor(tot/60)%24,mn=tot%60;return (h%12||12)+':'+(mn<10?'0':'')+mn+' '+(h>=12?'PM':'AM');}
+// ── Render ──
 function computeArrivals(){var c=0;includedVisits.forEach(function(v,i){c+=travelTimes[i]||0;v.estArrival=fmtTime(c,curStartTime);v.arrivalOffset=c;c+=v.dwell;});}
 
 function renderResults(availHours){
@@ -447,32 +445,12 @@ function renderResults(availHours){
   var dr=travelTimes.reduce(function(s,t){return s+t;},0)+returnTravel;
   var tt=td+dr,p1d=deferred.filter(function(v){return v.priority===1;}).length;
   var endTime=fmtTime(tt,curStartTime);
-  var driveHrs=Math.floor(totalDriveMins/60),driveMins=totalDriveMins%60;
-  var driveLabel=driveHrs>0?driveHrs+'h '+(driveMins>0?driveMins+'m':''):driveMins+'m';
-
-  gid('endpointSummary').innerHTML=
-    '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">'+
-    '<div class="endpoint-row">🟢 <strong>Start:</strong>&nbsp;'+curStartAddr+'</div>'+
-    '<div class="endpoint-row">🔴 <strong>End:</strong>&nbsp;'+curEndAddr+(curStartAddr===curEndAddr?' <span style="font-size:0.72rem;color:#718096;">(round trip)</span>':'')+'</div>'+
-    '</div>'+
-    '<div style="display:flex;gap:10px;flex-wrap:wrap;">'+
-    '<div class="endpoint-row">🕐 <strong>Est. finish:</strong>&nbsp;'+endTime+'</div>'+
-    '<div class="endpoint-row">🚗 <strong>Total drive:</strong>&nbsp;'+driveLabel+'&nbsp;·&nbsp;'+totalMiles.toFixed(1)+' miles</div>'+
-    '</div>';
-
-  var ah=deferred.length===0
-    ?'<div class="alert alert-ok">✅ All '+includedVisits.length+' visits fit in your '+availHours+'h window. Total day: <strong>'+tt.toFixed(1)+'h</strong> ('+td.toFixed(1)+'h dwell · '+dr.toFixed(1)+'h driving).</div>'
-    :'<div class="alert alert-warn">⚠️ '+deferred.length+' visit'+(deferred.length>1?'s':'')+' deferred.'+(p1d>0?' <strong style="color:#b91c1c;">⚠️ '+p1d+' P1 deferred — consider extending your day.</strong>':' All P1 visits included.')+'</div>';
+  var dh=Math.floor(totalDriveMins/60),dm=totalDriveMins%60;
+  var dl=dh>0?dh+'h '+(dm>0?dm+'m':''):dm+'m';
+  gid('endpointSummary').innerHTML='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;"><div class="endpoint-row">🟢 <strong>Start:</strong>&nbsp;'+curStartAddr+'</div><div class="endpoint-row">🔴 <strong>End:</strong>&nbsp;'+curEndAddr+(curStartAddr===curEndAddr?' <span style="font-size:0.72rem;color:#718096;">(round trip)</span>':'')+'</div></div><div style="display:flex;gap:10px;flex-wrap:wrap;"><div class="endpoint-row">🕐 <strong>Est. finish:</strong>&nbsp;'+endTime+'</div><div class="endpoint-row">🚗 <strong>Total drive:</strong>&nbsp;'+dl+'&nbsp;·&nbsp;'+totalMiles.toFixed(1)+' miles</div></div>';
+  var ah=deferred.length===0?'<div class="alert alert-ok">✅ All '+includedVisits.length+' visits fit in your '+availHours+'h window. Total: <strong>'+tt.toFixed(1)+'h</strong> ('+td.toFixed(1)+'h dwell · '+dr.toFixed(1)+'h driving).</div>':'<div class="alert alert-warn">⚠️ '+deferred.length+' visit'+(deferred.length>1?'s':'')+' deferred.'+(p1d>0?' <strong style="color:#b91c1c;">⚠️ '+p1d+' P1 deferred.</strong>':' All P1 visits included.')+'</div>';
   gid('alertBox').innerHTML=ah;
-
-  gid('summaryBar').innerHTML=
-    '<div class="stat"><div class="val">'+includedVisits.length+'</div><div class="lbl">Visits Today</div></div>'+
-    '<div class="stat"><div class="val">'+td.toFixed(1)+'h</div><div class="lbl">Total Dwell</div></div>'+
-    '<div class="stat"><div class="val">'+driveLabel+'</div><div class="lbl">Drive Time</div></div>'+
-    '<div class="stat"><div class="val">'+totalMiles.toFixed(1)+'</div><div class="lbl">Total Miles</div></div>'+
-    '<div class="stat"><div class="val">'+tt.toFixed(1)+'h</div><div class="lbl">Total Day</div></div>'+
-    '<div class="stat"><div class="val">'+deferred.length+'</div><div class="lbl">Deferred</div></div>';
-
+  gid('summaryBar').innerHTML='<div class="stat"><div class="val">'+includedVisits.length+'</div><div class="lbl">Visits</div></div><div class="stat"><div class="val">'+td.toFixed(1)+'h</div><div class="lbl">Dwell</div></div><div class="stat"><div class="val">'+dl+'</div><div class="lbl">Drive Time</div></div><div class="stat"><div class="val">'+totalMiles.toFixed(1)+'</div><div class="lbl">Miles</div></div><div class="stat"><div class="val">'+tt.toFixed(1)+'h</div><div class="lbl">Total Day</div></div><div class="stat"><div class="val">'+deferred.length+'</div><div class="lbl">Deferred</div></div>';
   renderTable();renderDeferred();updateMapsLink();renderCalendarSection();renderRouteDetail();
   gid('results').scrollIntoView({behavior:'smooth'});
 }
@@ -481,27 +459,11 @@ function renderTable(){
   var tb=gid('includedBody');tb.innerHTML='';
   includedVisits.forEach(function(v,i){
     var tr=document.createElement('tr');tr.className='drag-row';tr.draggable=true;tr.dataset.idx=i;
-    var upBtn=i===0?'<button disabled style="opacity:0.3;background:#e2e8f0;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;">▲</button>':'<button onclick="moveStop('+i+',-1)" style="background:#1a56db;color:white;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;cursor:pointer;">▲</button>';
-    var dnBtn=i===includedVisits.length-1?'<button disabled style="opacity:0.3;background:#e2e8f0;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;">▼</button>':'<button onclick="moveStop('+i+',1)" style="background:#1a56db;color:white;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;cursor:pointer;">▼</button>';
-    tr.innerHTML='<td><span class="drag-handle">⠿</span></td>'+
-      '<td><div style="display:flex;flex-direction:column;gap:3px;">'+upBtn+dnBtn+'</div></td>'+
-      '<td><span class="order-num">'+(i+1)+'</span></td>'+
-      '<td style="max-width:200px;">'+v.address+(!v.known?'<br><span style="color:#e53e3e;font-size:0.7rem;">(unrecognized type)</span>':'')+'</td>'+
-      '<td>'+v.visitType+'</td>'+
-      '<td><span class="badge p'+v.priority+'">P'+v.priority+'</span></td>'+
-      '<td>'+dwellLabel(v.dwell)+'</td>'+
-      '<td>'+(i===0?'<span class="travel-chip">from start</span>':'<span class="travel-chip">~'+dwellLabel(travelTimes[i])+'</span>')+'</td>'+
-      '<td>'+v.estArrival+'</td>';
+    var up=i===0?'<button disabled style="opacity:0.3;background:#e2e8f0;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;">▲</button>':'<button onclick="moveStop('+i+',-1)" style="background:#1a56db;color:white;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;cursor:pointer;">▲</button>';
+    var dn=i===includedVisits.length-1?'<button disabled style="opacity:0.3;background:#e2e8f0;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;">▼</button>':'<button onclick="moveStop('+i+',1)" style="background:#1a56db;color:white;border:none;border-radius:4px;padding:2px 6px;font-size:0.8rem;cursor:pointer;">▼</button>';
+    tr.innerHTML='<td><span class="drag-handle">⠿</span></td><td><div style="display:flex;flex-direction:column;gap:3px;">'+up+dn+'</div></td><td><span class="order-num">'+(i+1)+'</span></td><td style="max-width:200px;">'+v.address+(!v.known?'<br><span style="color:#e53e3e;font-size:0.7rem;">(unrecognized)</span>':'')+'</td><td>'+v.visitType+'</td><td><span class="badge p'+v.priority+'">P'+v.priority+'</span></td><td>'+dwellLabel(v.dwell)+'</td><td>'+(i===0?'<span class="travel-chip">from start</span>':'<span class="travel-chip">~'+dwellLabel(travelTimes[i])+'</span>')+'</td><td>'+v.estArrival+'</td>';
     addDrag(tr);tb.appendChild(tr);
   });
-}
-
-function moveStop(idx,dir){
-  var newIdx=idx+dir;
-  if(newIdx<0||newIdx>=includedVisits.length)return;
-  var mv=includedVisits.splice(idx,1)[0];includedVisits.splice(newIdx,0,mv);
-  var mt=travelTimes.splice(idx,1)[0];travelTimes.splice(newIdx,0,mt);
-  computeArrivals();renderTable();renderCalendarSection();renderRouteDetail();updateMapsLink();
 }
 
 var dragSrc=null;
@@ -510,253 +472,114 @@ function addDrag(row){
   row.addEventListener('dragend',function(){row.classList.remove('dragging');});
   row.addEventListener('dragover',function(e){e.preventDefault();document.querySelectorAll('.drag-row').forEach(function(r){r.classList.remove('drag-over');});if(row!==dragSrc)row.classList.add('drag-over');});
   row.addEventListener('dragleave',function(){row.classList.remove('drag-over');});
-  row.addEventListener('drop',function(e){e.preventDefault();row.classList.remove('drag-over');if(!dragSrc||dragSrc===row)return;var si=parseInt(dragSrc.dataset.idx),di=parseInt(row.dataset.idx),mv=includedVisits.splice(si,1)[0];includedVisits.splice(di,0,mv);var mt=travelTimes.splice(si,1)[0];travelTimes.splice(di,0,mt);computeArrivals();renderTable();renderCalendarSection();updateMapsLink();});
+  row.addEventListener('drop',function(e){e.preventDefault();row.classList.remove('drag-over');if(!dragSrc||dragSrc===row)return;var si=parseInt(dragSrc.dataset.idx),di=parseInt(row.dataset.idx),mv=includedVisits.splice(si,1)[0];includedVisits.splice(di,0,mv);var mt=travelTimes.splice(si,1)[0];travelTimes.splice(di,0,mt);computeArrivals();renderTable();renderCalendarSection();renderRouteDetail();updateMapsLink();});
 }
-function recalcAfterReorder(){computeArrivals();renderTable();renderCalendarSection();updateMapsLink();}
 
 function renderDeferred(){
   var sec=gid('deferredSection');if(!deferred.length){sec.style.display='none';return;}
   sec.style.display='block';
-  gid('deferredAlert').textContent=deferred.length+' visit'+(deferred.length>1?'s':'')+' couldn\'t fit today. Copy below to paste into tomorrow\'s input.';
+  gid('deferredAlert').textContent=deferred.length+' visit'+(deferred.length>1?'s':'')+' couldn\'t fit today.';
   gid('carryoverText').textContent=deferred.map(function(v){return v.address+' | '+v.visitType;}).join('\n');
 }
 
 function updateMapsLink(){
   var addrs=[curStartAddr].concat(includedVisits.map(function(v){return v.address;})).concat([curEndAddr]).filter(Boolean);
   if(addrs.length<2){gid('mapsLink').href='#';return;}
-  var o=encodeURIComponent(addrs[0]);
-  var d=encodeURIComponent(addrs[addrs.length-1]);
-  var wps=addrs.slice(1,-1).map(function(a){return encodeURIComponent(a);}).join('|');
+  var o=encodeURIComponent(addrs[0]),d=encodeURIComponent(addrs[addrs.length-1]),wps=addrs.slice(1,-1).map(function(a){return encodeURIComponent(a);}).join('|');
   var url='https://www.google.com/maps/dir/?api=1&origin='+o+'&destination='+d+'&travelmode=driving';
   if(wps)url+='&waypoints='+wps;
   gid('mapsLink').href=url;
 }
 
+function renderRouteDetail(){
+  var sec=gid('routeDetailSection'),list=gid('routeDetailList');
+  if(!sec||!list||!includedVisits.length){if(sec)sec.style.display='none';return;}
+  sec.style.display='block';
+  var allAddrs=[curStartAddr].concat(includedVisits.map(function(v){return v.address;})).concat([curEndAddr]);
+  var allTimes=travelTimes.concat([returnTravel]);
+  var allDists=legDistances.concat([legDistances[legDistances.length-1]||0]);
+  var html='',cumMiles=0;
+  for(var i=0;i<allAddrs.length-1;i++){
+    var legMins=Math.round((allTimes[i]||0)*60),legMi=(allDists[i]||0).toFixed(1);
+    cumMiles+=(allDists[i]||0);
+    var isRet=i===allAddrs.length-2,col=i===0?'#0d9f6e':isRet?'#e53e3e':'#1a56db';
+    var visit=includedVisits[i-1],badge=visit?'<span class="badge p'+visit.priority+'" style="margin-left:6px;">'+visit.visitType+'</span>':'';
+    html+='<div style="display:flex;gap:0;margin-bottom:4px;"><div style="display:flex;flex-direction:column;align-items:center;margin-right:12px;"><div style="width:12px;height:12px;border-radius:50%;background:'+col+';flex-shrink:0;margin-top:3px;"></div>'+(i<allAddrs.length-2?'<div style="width:2px;flex:1;background:#e2e8f0;margin:2px 0;min-height:30px;"></div>':'')+'</div><div style="flex:1;padding-bottom:12px;"><div style="font-size:0.78rem;font-weight:700;color:#718096;text-transform:uppercase;">'+(i===0?'Start':isRet?'Return Home':'Stop '+i)+'</div><div style="font-size:0.85rem;color:#1a202c;font-weight:600;">'+allAddrs[i]+badge+'</div><div style="font-size:0.78rem;color:#718096;margin-top:4px;padding:4px 8px;background:#f7faff;border-radius:6px;display:inline-block;">🚗 '+legMins+' min · '+legMi+' mi · cumulative: '+cumMiles.toFixed(1)+' mi</div></div></div>';
+  }
+  html+='<div style="display:flex;gap:0;"><div style="width:12px;height:12px;border-radius:50%;background:#e53e3e;flex-shrink:0;margin-right:12px;margin-top:3px;"></div><div style="font-size:0.85rem;color:#1a202c;font-weight:600;">'+allAddrs[allAddrs.length-1]+'</div></div>';
+  list.innerHTML=html;
+}
+
 // ── Google Calendar ──
 function renderCalendarSection(){
-  var sec=gid('calendarSection');
-  var list=gid('calendarList');
-  if(!sec||!list)return;
+  var sec=gid('calendarSection'),list=gid('calendarList');
+  if(!sec||!list){return;}
   if(!includedVisits.length){sec.style.display='none';return;}
-  sec.style.display='block';
-  list.innerHTML='';
+  sec.style.display='block';list.innerHTML='';
   includedVisits.forEach(function(v,i){
-    var startStr=fmtTime(v.arrivalOffset,curStartTime);
-    var endStr=fmtTime(v.arrivalOffset+v.dwell,curStartTime);
-    var div=document.createElement('div');
-    div.className='cal-item';
-    div.innerHTML=
-      '<input type="checkbox" id="calchk_'+i+'" checked style="margin-top:3px;width:16px;height:16px;accent-color:#1a56db;flex-shrink:0;">'+
-      '<label for="calchk_'+i+'" style="font-size:0.85rem;color:#1a202c;cursor:pointer;">'+
-        '<strong>'+v.address+'</strong><br>'+
-        '<span style="color:#4a5568;">'+v.visitType+' &nbsp;·&nbsp; '+startStr+' – '+endStr+' ('+dwellLabel(v.dwell)+')</span>'+
-      '</label>';
+    var div=document.createElement('div');div.className='cal-item';
+    div.innerHTML='<input type="checkbox" id="calchk_'+i+'" checked style="margin-top:3px;width:16px;height:16px;accent-color:#1a56db;flex-shrink:0;"><label for="calchk_'+i+'" style="font-size:0.85rem;color:#1a202c;cursor:pointer;"><strong>'+v.address+'</strong><br><span style="color:#4a5568;">'+v.visitType+' · '+fmtTime(v.arrivalOffset,curStartTime)+' – '+fmtTime(v.arrivalOffset+v.dwell,curStartTime)+' ('+dwellLabel(v.dwell)+')</span></label>';
     list.appendChild(div);
   });
 }
 
-function selectAllCalendar(){includedVisits.forEach(function(v,i){var el=gid('calchk_'+i);if(el)el.checked=true;});}
-function deselectAllCalendar(){includedVisits.forEach(function(v,i){var el=gid('calchk_'+i);if(el)el.checked=false;});}
-
-function getCalendarDateTime(arrivalOffset,dwell,isEnd){
+function getCalDT(arrivalOffset,dwell,isEnd){
   var base=gid('travelDate').value||new Date().toISOString().slice(0,10);
-  var parts=curStartTime.split(':').map(Number);
-  var totalMins=parts[0]*60+parts[1]+Math.round((isEnd?arrivalOffset+dwell:arrivalOffset)*60);
-  var h=Math.floor(totalMins/60)%24,m=totalMins%60;
+  var p=curStartTime.split(':').map(Number),tot=p[0]*60+p[1]+Math.round((isEnd?arrivalOffset+dwell:arrivalOffset)*60);
+  var h=Math.floor(tot/60)%24,m=tot%60;
   return base+'T'+(h<10?'0':'')+h+':'+(m<10?'0':'')+m+':00';
 }
 
 function addToCalendar(){
   hideMsg('calendarMsg');
-  var selected=[];
-  includedVisits.forEach(function(v,i){var el=gid('calchk_'+i);if(el&&el.checked)selected.push(v);});
-  if(!selected.length){showMsg('calendarMsg','Please select at least one visit.','error');return;}
+  var sel=[];
+  includedVisits.forEach(function(v,i){var el=gid('calchk_'+i);if(el&&el.checked)sel.push(v);});
+  if(!sel.length){showMsg('calendarMsg','Please select at least one visit.','error');return;}
   if(!window.google||!window.google.accounts){
     var s=document.createElement('script');
     s.src='https://accounts.google.com/gsi/client';
-    s.onload=function(){requestCalendarToken(selected);};
-    s.onerror=function(){showMsg('calendarMsg','Failed to load Google Sign-In. Check your connection.','error');};
+    s.onload=function(){doCalendarAuth(sel);};
+    s.onerror=function(){showMsg('calendarMsg','Failed to load Google Sign-In.','error');};
     document.head.appendChild(s);
-  } else {
-    requestCalendarToken(selected);
-  }
+  } else { doCalendarAuth(sel); }
 }
 
-function requestCalendarToken(selected){
-  var client=window.google.accounts.oauth2.initTokenClient({
-    client_id:GOOGLE_CLIENT_ID,
-    scope:CALENDAR_SCOPE,
-    callback:function(response){
-      if(response.error){showMsg('calendarMsg','Sign-in failed: '+response.error,'error');return;}
-      calendarToken=response.access_token;
-      createCalendarEvents(selected);
-    }
-  });
-  client.requestAccessToken();
+function doCalendarAuth(sel){
+  window.google.accounts.oauth2.initTokenClient({
+    client_id:GOOGLE_CLIENT_ID,scope:CALENDAR_SCOPE,
+    callback:function(r){if(r.error){showMsg('calendarMsg','Sign-in failed: '+r.error,'error');return;}calendarToken=r.access_token;createEvents(sel);}
+  }).requestAccessToken();
 }
 
-async function createCalendarEvents(selected){
-  showMsg('calendarMsg','Adding events to your Google Calendar...','info');
-  var tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
-  var errors=0;
-  for(var i=0;i<selected.length;i++){
-    var v=selected[i];
-    var event={
-      summary:v.visitType+' — '+v.address,
-      location:v.address,
-      description:'Visit Type: '+v.visitType+'\nPriority: P'+v.priority+'\nDwell Time: '+dwellLabel(v.dwell),
-      start:{dateTime:getCalendarDateTime(v.arrivalOffset,v.dwell,false),timeZone:tz},
-      end:{dateTime:getCalendarDateTime(v.arrivalOffset,v.dwell,true),timeZone:tz}
-    };
+async function createEvents(sel){
+  showMsg('calendarMsg','Adding events...','info');
+  var tz=Intl.DateTimeFormat().resolvedOptions().timeZone,errors=0;
+  for(var i=0;i<sel.length;i++){
+    var v=sel[i];
     try{
-      var resp=await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events',{
-        method:'POST',
-        headers:{'Authorization':'Bearer '+calendarToken,'Content-Type':'application/json'},
-        body:JSON.stringify(event)
+      var r=await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events',{
+        method:'POST',headers:{'Authorization':'Bearer '+calendarToken,'Content-Type':'application/json'},
+        body:JSON.stringify({summary:v.visitType+' — '+v.address,location:v.address,description:'Visit Type: '+v.visitType+'\nPriority: P'+v.priority+'\nDwell: '+dwellLabel(v.dwell),start:{dateTime:getCalDT(v.arrivalOffset,v.dwell,false),timeZone:tz},end:{dateTime:getCalDT(v.arrivalOffset,v.dwell,true),timeZone:tz}})
       });
-      if(!resp.ok)errors++;
+      if(!r.ok)errors++;
     }catch(e){errors++;}
   }
-  if(errors===0){
-    hideMsg('calendarMsg');
-    var tag=gid('calendarSuccessTag');
-    if(tag){tag.style.display='inline';setTimeout(function(){tag.style.display='none';},3000);}
-  } else {
-    showMsg('calendarMsg',errors+' event(s) failed to add. Please try again.','error');
-  }
+  if(errors===0){hideMsg('calendarMsg');var t=gid('calendarSuccessTag');if(t){t.style.display='inline';setTimeout(function(){t.style.display='none';},3000);}}
+  else{showMsg('calendarMsg',errors+' event(s) failed. Please try again.','error');}
 }
 
-function renderRouteDetail(){
-  var sec=gid('routeDetailSection');
-  var list=gid('routeDetailList');
-  if(!sec||!list)return;
-  if(!includedVisits.length){sec.style.display='none';return;}
-  sec.style.display='block';
-  var html='';
-  var allAddrs=[curStartAddr].concat(includedVisits.map(function(v){return v.address;})).concat([curEndAddr]);
-  var allTimes=travelTimes.concat([returnTravel]);
-  var allDists=legDistances.concat([legDistances[legDistances.length-1]||0]);
-  var cumMiles=0;
-
-  for(var i=0;i<allAddrs.length-1;i++){
-    var fromAddr=allAddrs[i];
-    var toAddr=allAddrs[i+1];
-    var legMins=Math.round((allTimes[i]||0)*60);
-    var legMi=(allDists[i]||0).toFixed(1);
-    cumMiles+=(allDists[i]||0);
-    var isReturn=i===allAddrs.length-2&&curStartAddr===curEndAddr;
-    var label=i===0?'🏠 Start':isReturn?'🏠 Return home':'Stop '+(i);
-    var visit=includedVisits[i-1];
-    var visitInfo=visit?'<span class="badge p'+visit.priority+'" style="margin-left:6px;">'+visit.visitType+'</span>':'';
-
-    html+='<div style="display:flex;gap:0;margin-bottom:4px;">'+
-      '<div style="display:flex;flex-direction:column;align-items:center;margin-right:12px;">'+
-        '<div style="width:12px;height:12px;border-radius:50%;background:'+(i===0?'#0d9f6e':isReturn?'#e53e3e':'#1a56db')+';flex-shrink:0;margin-top:3px;"></div>'+
-        (i<allAddrs.length-2?'<div style="width:2px;flex:1;background:#e2e8f0;margin:2px 0;min-height:30px;"></div>':'')+'</div>'+
-      '<div style="flex:1;padding-bottom:12px;">'+
-        '<div style="font-size:0.78rem;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:0.04em;">'+label+'</div>'+
-        '<div style="font-size:0.85rem;color:#1a202c;font-weight:600;">'+fromAddr+visitInfo+'</div>'+
-        (i<allAddrs.length-1?
-          '<div style="font-size:0.78rem;color:#718096;margin-top:4px;padding:4px 8px;background:#f7faff;border-radius:6px;display:inline-block;">'+
-            '🚗 '+legMins+' min &nbsp;·&nbsp; '+legMi+' mi &nbsp;·&nbsp; cumulative: '+cumMiles.toFixed(1)+' mi'+
-          '</div>':'')+
-      '</div>'+
-    '</div>';
-  }
-  // Final destination
-  html+='<div style="display:flex;gap:0;">'+
-    '<div style="width:12px;height:12px;border-radius:50%;background:#e53e3e;flex-shrink:0;margin-right:12px;margin-top:3px;"></div>'+
-    '<div style="font-size:0.85rem;color:#1a202c;font-weight:600;">'+allAddrs[allAddrs.length-1]+'</div>'+
-  '</div>';
-
-  list.innerHTML=html;
-}
-
-navigator.clipboard.writeText(txt).then(function(){var tag=gid(tagId);if(tag){tag.style.display='inline';setTimeout(function(){tag.style.display='none';},2500);}});}
-function copyCarryover(){copyText(gid('carryoverText').textContent,'carryoverCopiedTag');}
-function copyRouteSummary(){
-  var txt='ROUTE PLAN — '+(gid('travelDate').value||'Today')+'\nStart: '+curStartAddr+' @ '+curStartTime+'\nEnd: '+curEndAddr+'\n\n';
-  includedVisits.forEach(function(v,i){txt+=(i+1)+'. '+v.address+'\n   '+v.visitType+' | P'+v.priority+' | Dwell: '+dwellLabel(v.dwell)+' | Arrive: '+v.estArrival+'\n';});
-  if(deferred.length){txt+='\nDEFERRED:\n';deferred.forEach(function(v){txt+='  - '+v.address+' | '+v.visitType+'\n';});}
-  copyText(txt,'routeCopiedTag');
-}
 function loadExample(){
   gid('visitInput').value='402 Hermine Blvd, San Antonio, TX 78212 | Day One Walk\n9950 Alexa Pl, San Antonio, TX 78251 | Temperature Check\n129 Amy Aly, San Antonio, TX 78253 | Setup\n12325 Switchgrass, San Antonio, TX 78252 | Progress\n8239 Recio Oak, San Antonio, TX 78223 | In-Person Walkthrough\n16506 Paso Rio Crk, San Antonio, TX 78247 | Utilities';
   gid('startTime').value='09:00';gid('availHours').value='6.5';hideMsg('planMsg');
 }
 function clearAll(){
-  gid('visitInput').value='';
-  gid('results').style.display='none';
-  gid('calendarSection').style.display='none';
-  includedVisits=[];travelTimes=[];deferred=[];
-  hideMsg('planMsg');
+  gid('visitInput').value='';gid('results').style.display='none';gid('calendarSection').style.display='none';
+  includedVisits=[];travelTimes=[];deferred=[];hideMsg('planMsg');
 }
 
-document.addEventListener('DOMContentLoaded', function(){
-  gid('travelDate').valueAsDate=new Date();
-
-  var diag=gid('homeDiag');
-  if(diag)diag.textContent='✓ Page ready. Button wired.';
-
-  var btn=gid('btnSaveHome');
-  if(btn){
-    btn.addEventListener('click', function(e){
-      e.preventDefault();
-      if(diag)diag.textContent='✓ Button tapped!';
-      var val=gid('homeAddrInput').value.trim();
-      if(!val){showMsg('homeMsg','Please enter an address first.','error');return;}
-      savedHome=val;storeSave('home',val);
-      gid('homeAddrDisplay').textContent=val;
-      gid('homeStatusTag').textContent='Saved ✓';gid('homeStatusTag').className='tag tag-saved';
-      gid('homeEdit').style.display='none';gid('homeDisplay').style.display='block';
-      hideMsg('homeMsg');
-      ['startHomeDisplay','endHomeDisplay'].forEach(function(id){var el=gid(id);if(el){el.textContent=val;el.classList.remove('empty');}});
-    });
-  } else {
-    if(diag)diag.textContent='❌ btnSaveHome not found!';
-  }
-
-  var editBtn=gid('btnEditHome');
-  if(editBtn)editBtn.addEventListener('click', function(){
-    gid('homeAddrInput').value=savedHome;
-    gid('homeDisplay').style.display='none';
-    gid('homeEdit').style.display='block';
-  });
-
-  var planBtn=gid('btnPlan');
-  if(planBtn)planBtn.addEventListener('click', planRoute);
-
-  var exBtn=gid('btnExample');
-  if(exBtn)exBtn.addEventListener('click', loadExample);
-
-  var clrBtn=gid('btnClear');
-  if(clrBtn)clrBtn.addEventListener('click', clearAll);
-
-  var recBtn=gid('btnRecalc');
-  if(recBtn)recBtn.addEventListener('click', recalcAfterReorder);
-
-  var startChk=gid('startUseHome');
-  if(startChk)startChk.addEventListener('change', function(){
-    var u=startChk.checked;
-    gid('startHomeDisplay').style.display=u?'block':'none';
-    gid('startCustomWrap').style.display=u?'none':'block';
-  });
-
-  var endChk=gid('endUseHome');
-  if(endChk)endChk.addEventListener('change', function(){
-    var u=endChk.checked;
-    gid('endHomeDisplay').style.display=u?'block':'none';
-    gid('endCustomWrap').style.display=u?'none':'block';
-  });
-
-  var ccBtn=gid('btnCopyCarryover');
-  if(ccBtn)ccBtn.addEventListener('click', copyCarryover);
-
-  var crBtn=gid('btnCopyRoute');
-  if(crBtn)crBtn.addEventListener('click', copyRouteSummary);
-
-  loadSaved();
-});
+// ── Init ──
+gid('travelDate').valueAsDate = new Date();
+loadSaved();
 </script>
 </body>
 </html>
