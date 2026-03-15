@@ -192,6 +192,10 @@ button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600
           </div>
         </div>
       </div>
+      <div id="routeDetailSection" style="display:none;margin-top:16px;">
+        <div class="section-title">🗺️ Route Detail — Leg by Leg</div>
+        <div id="routeDetailList"></div>
+      </div>
       <hr class="divider">
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <a class="btn-green" id="mapsLink" href="#" target="_blank">🗺️ Open in Google Maps</a>
@@ -467,7 +471,7 @@ function renderResults(availHours){
     '<div class="stat"><div class="val">'+tt.toFixed(1)+'h</div><div class="lbl">Total Day</div></div>'+
     '<div class="stat"><div class="val">'+deferred.length+'</div><div class="lbl">Deferred</div></div>';
 
-  renderTable();renderDeferred();updateMapsLink();renderCalendarSection();
+  renderTable();renderDeferred();updateMapsLink();renderCalendarSection();renderRouteDetail();
   gid('results').scrollIntoView({behavior:'smooth'});
 }
 
@@ -495,7 +499,7 @@ function moveStop(idx,dir){
   if(newIdx<0||newIdx>=includedVisits.length)return;
   var mv=includedVisits.splice(idx,1)[0];includedVisits.splice(newIdx,0,mv);
   var mt=travelTimes.splice(idx,1)[0];travelTimes.splice(newIdx,0,mt);
-  computeArrivals();renderTable();renderCalendarSection();updateMapsLink();
+  computeArrivals();renderTable();renderCalendarSection();renderRouteDetail();updateMapsLink();
 }
 
 var dragSrc=null;
@@ -518,14 +522,11 @@ function renderDeferred(){
 function updateMapsLink(){
   var addrs=[curStartAddr].concat(includedVisits.map(function(v){return v.address;})).concat([curEndAddr]).filter(Boolean);
   if(addrs.length<2){gid('mapsLink').href='#';return;}
-
-  // Use maps.google.com (browser version) instead of google.com/maps (launches app)
-  // This keeps full route preview with all details visible on iPad
   var o=encodeURIComponent(addrs[0]);
   var d=encodeURIComponent(addrs[addrs.length-1]);
   var wps=addrs.slice(1,-1).map(function(a){return encodeURIComponent(a);}).join('|');
-  var url='https://maps.google.com/?saddr='+o+'&daddr='+d+'&dirflg=d';
-  if(wps) url='https://maps.google.com/maps?saddr='+o+'&daddr='+wps.split('|').concat([d]).join('+to:')+'&dirflg=d';
+  var url='https://www.google.com/maps/dir/?api=1&origin='+o+'&destination='+d+'&travelmode=driving';
+  if(wps)url+='&waypoints='+wps;
   gid('mapsLink').href=url;
 }
 
@@ -623,7 +624,53 @@ async function createCalendarEvents(selected){
   }
 }
 
-function copyText(txt,tagId){navigator.clipboard.writeText(txt).then(function(){var tag=gid(tagId);if(tag){tag.style.display='inline';setTimeout(function(){tag.style.display='none';},2500);}});}
+function renderRouteDetail(){
+  var sec=gid('routeDetailSection');
+  var list=gid('routeDetailList');
+  if(!sec||!list)return;
+  if(!includedVisits.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  var html='';
+  var allAddrs=[curStartAddr].concat(includedVisits.map(function(v){return v.address;})).concat([curEndAddr]);
+  var allTimes=travelTimes.concat([returnTravel]);
+  var allDists=legDistances.concat([legDistances[legDistances.length-1]||0]);
+  var cumMiles=0;
+
+  for(var i=0;i<allAddrs.length-1;i++){
+    var fromAddr=allAddrs[i];
+    var toAddr=allAddrs[i+1];
+    var legMins=Math.round((allTimes[i]||0)*60);
+    var legMi=(allDists[i]||0).toFixed(1);
+    cumMiles+=(allDists[i]||0);
+    var isReturn=i===allAddrs.length-2&&curStartAddr===curEndAddr;
+    var label=i===0?'🏠 Start':isReturn?'🏠 Return home':'Stop '+(i);
+    var visit=includedVisits[i-1];
+    var visitInfo=visit?'<span class="badge p'+visit.priority+'" style="margin-left:6px;">'+visit.visitType+'</span>':'';
+
+    html+='<div style="display:flex;gap:0;margin-bottom:4px;">'+
+      '<div style="display:flex;flex-direction:column;align-items:center;margin-right:12px;">'+
+        '<div style="width:12px;height:12px;border-radius:50%;background:'+(i===0?'#0d9f6e':isReturn?'#e53e3e':'#1a56db')+';flex-shrink:0;margin-top:3px;"></div>'+
+        (i<allAddrs.length-2?'<div style="width:2px;flex:1;background:#e2e8f0;margin:2px 0;min-height:30px;"></div>':'')+'</div>'+
+      '<div style="flex:1;padding-bottom:12px;">'+
+        '<div style="font-size:0.78rem;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:0.04em;">'+label+'</div>'+
+        '<div style="font-size:0.85rem;color:#1a202c;font-weight:600;">'+fromAddr+visitInfo+'</div>'+
+        (i<allAddrs.length-1?
+          '<div style="font-size:0.78rem;color:#718096;margin-top:4px;padding:4px 8px;background:#f7faff;border-radius:6px;display:inline-block;">'+
+            '🚗 '+legMins+' min &nbsp;·&nbsp; '+legMi+' mi &nbsp;·&nbsp; cumulative: '+cumMiles.toFixed(1)+' mi'+
+          '</div>':'')+
+      '</div>'+
+    '</div>';
+  }
+  // Final destination
+  html+='<div style="display:flex;gap:0;">'+
+    '<div style="width:12px;height:12px;border-radius:50%;background:#e53e3e;flex-shrink:0;margin-right:12px;margin-top:3px;"></div>'+
+    '<div style="font-size:0.85rem;color:#1a202c;font-weight:600;">'+allAddrs[allAddrs.length-1]+'</div>'+
+  '</div>';
+
+  list.innerHTML=html;
+}
+
+navigator.clipboard.writeText(txt).then(function(){var tag=gid(tagId);if(tag){tag.style.display='inline';setTimeout(function(){tag.style.display='none';},2500);}});}
 function copyCarryover(){copyText(gid('carryoverText').textContent,'carryoverCopiedTag');}
 function copyRouteSummary(){
   var txt='ROUTE PLAN — '+(gid('travelDate').value||'Today')+'\nStart: '+curStartAddr+' @ '+curStartTime+'\nEnd: '+curEndAddr+'\n\n';
