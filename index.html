@@ -118,7 +118,8 @@ button { font-family:inherit; cursor:pointer; border-radius:8px; font-weight:600
     </div>
     <div id="homeEdit">
       <input type="text" id="homeAddrInput" placeholder="e.g. 123 Main St, San Antonio, TX" style="margin-bottom:8px;">
-      <button class="btn-primary btn-sm" id="btnSaveHome">💾 Save Home Address</button>
+      <button class="btn-primary btn-sm" id="btnSaveHome" style="margin-bottom:8px;">💾 Save Home Address</button>
+      <div id="homeDiag" style="font-size:0.75rem;color:#666;margin-top:4px;"></div>
     </div>
   </div>
 
@@ -692,19 +693,41 @@ function clearAll(){
 
 window.onload=function(){
   gid('travelDate').valueAsDate=new Date();
-  loadSaved();
 
-  // Wire all buttons via addEventListener — most reliable on iOS Chrome
-  gid('btnSaveHome').addEventListener('click', function(){
-    var val=gid('homeAddrInput').value.trim();
-    if(!val){showMsg('homeMsg','Please enter an address first.','error');return;}
-    savedHome=val;storeSave('home',val);
-    gid('homeAddrDisplay').textContent=val;
-    gid('homeStatusTag').textContent='Saved ✓';gid('homeStatusTag').className='tag tag-saved';
-    gid('homeEdit').style.display='none';gid('homeDisplay').style.display='block';
-    hideMsg('homeMsg');
-    ['startHomeDisplay','endHomeDisplay'].forEach(function(id){var el=gid(id);el.textContent=val;el.classList.remove('empty');});
-  });
+  // Diagnostic — confirm onload fired
+  var diag=gid('homeDiag');
+  if(diag)diag.textContent='✓ Page loaded. Button should work.';
+
+  // Wire save home button with full inline logic
+  var btn=gid('btnSaveHome');
+  if(btn){
+    if(diag)diag.textContent='✓ Page loaded. Button found and wired.';
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      if(diag)diag.textContent='✓ Button tapped!';
+      var val=gid('homeAddrInput').value.trim();
+      if(!val){
+        if(diag)diag.textContent='⚠ No address entered.';
+        showMsg('homeMsg','Please enter an address first.','error');
+        return;
+      }
+      savedHome=val;
+      storeSave('home',val);
+      gid('homeAddrDisplay').textContent=val;
+      gid('homeStatusTag').textContent='Saved ✓';
+      gid('homeStatusTag').className='tag tag-saved';
+      gid('homeEdit').style.display='none';
+      gid('homeDisplay').style.display='block';
+      hideMsg('homeMsg');
+      ['startHomeDisplay','endHomeDisplay'].forEach(function(id){
+        var el=gid(id);
+        if(el){el.textContent=val;el.classList.remove('empty');}
+      });
+    });
+  } else {
+    if(diag)diag.textContent='❌ ERROR: btnSaveHome not found in DOM.';
+  }
+
   gid('btnEditHome').addEventListener('click', function(){
     gid('homeAddrInput').value=savedHome;
     gid('homeDisplay').style.display='none';
@@ -727,7 +750,8 @@ window.onload=function(){
   gid('btnCopyCarryover').addEventListener('click', copyCarryover);
   gid('btnCopyRoute').addEventListener('click', copyRouteSummary);
 
-  // Load Google Maps
+  loadSaved();
+
   var s=document.createElement('script');
   s.src='https://maps.googleapis.com/maps/api/js?key='+GOOGLE_MAPS_KEY;
   document.head.appendChild(s);
