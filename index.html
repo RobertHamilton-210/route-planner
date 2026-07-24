@@ -288,6 +288,20 @@ var VISIT_TYPES = {
   "Utilities":{dwell:0.25,priority:4},"Winterization":{dwell:0.5,priority:3}
 };
 
+// ── Alias table (normalized: lowercase, letters+digits only) ──
+// Matched before fuzzy matching so short codes like "sr","qc","d1w" resolve exactly.
+var ALIASES={
+  "access":"Access Issues","bom":"Bring On Market (BOM)","d1w":"Day One Walk","d0w":"Day One Walk","dow":"Day One Walk",
+  "listedd1w":"Day One Walk Listed","reitftd1w":"Day One Walk REIT Fallthrough","dv":"Diligence","ftsetup":"Fallthrough Setup",
+  "cubi":"Floor Plan Scan","cubicasa":"Floor Plan Scan","hoa":"HOA Violation","hhc":"Home Health Checkup",
+  "iwt":"In-Person Walkthrough","ipw":"In-Person Walkthrough","incident":"Incident Response","lcowt":"Late Checkout Walkthrough",
+  "lid":"Listed Inventory Diagnostic","nla":"New Listing Audit","oboacq":"OBO Acquisition","oboacc":"ODA Access",
+  "poststorm":"Post Storm Assessment","prestorm":"Pre Storm Assessment","storm":"Post Storm Assessment",
+  "pv":"Progress","prog":"Progress","qc":"Quality Control","listqc":"Quality Control Listed",
+  "codechg":"Resale Door Code Change","sec":"Security","su":"Setup","extsu":"Setup External Listing","sr":"SmartRent Issue",
+  "tom":"Take Off Market (TOM)","td":"Teardown","teardown":"Teardown","temp":"Temperature Check","utl":"Utilities"
+};
+
 // ── Constants & state ──
 var GOOGLE_CLIENT_ID = '843255431399-edaat9nt102t44fcc4jrb5q7mkn2n8qu.apps.googleusercontent.com';
 var CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
@@ -333,6 +347,7 @@ function loadSaved(){
 function fuzzyMatch(raw){
   var norm=function(s){return s.toLowerCase().replace(/[^a-z0-9]/g,'');};
   var inp=norm(raw),keys=Object.keys(VISIT_TYPES);
+  if(ALIASES[inp])return ALIASES[inp];
   for(var i=0;i<keys.length;i++){if(norm(keys[i])===inp)return keys[i];}
   var best=null,bestScore=0;
   for(var i=0;i<keys.length;i++){var nk=norm(keys[i]),m=0;for(var j=0;j<inp.length-2;j++){if(nk.includes(inp.slice(j,j+3)))m++;}var s=m/Math.max(inp.length,nk.length);if(s>bestScore){bestScore=s;best=keys[i];}}
@@ -345,7 +360,7 @@ function parseVisits(raw){
   while(i<lines.length){
     var line=lines[i];
     if(line.includes('|')){var idx=line.lastIndexOf('|'),addr=line.slice(0,idx).trim(),vtRaw=line.slice(idx+1).trim(),vt=fuzzyMatch(vtRaw),cfg=VISIT_TYPES[vt];if(addr&&vt)visits.push({address:addr,visitType:vt,dwell:cfg?cfg.dwell:0.5,priority:cfg?cfg.priority:3,known:!!cfg});i++;continue;}
-    if(line.includes('\t')){var parts=line.split('\t').map(function(p){return p.trim();}),vtRaw=parts[parts.length-1],addr=parts.slice(0,parts.length-1).join(' ').trim(),vt=fuzzyMatch(vtRaw),cfg=VISIT_TYPES[vt];if(addr&&vt)visits.push({address:addr,visitType:vt,dwell:cfg?cfg.dwell:0.5,priority:cfg?cfg.priority:3,known:!!cfg});i++;continue;}
+    if(line.includes('\t')){var parts=line.split('\t').map(function(p){return p.trim();}).filter(Boolean),addr='',vtRaw='';for(var p=0;p<parts.length;p++){if(!addr&&isAddress(parts[p]))addr=parts[p];}for(var q=0;q<parts.length;q++){if(parts[q]===addr)continue;var c=fuzzyMatch(parts[q]);if(VISIT_TYPES[c]){vtRaw=parts[q];break;}}if(addr&&vtRaw){var vt=fuzzyMatch(vtRaw),cfg=VISIT_TYPES[vt];visits.push({address:addr,visitType:vt,dwell:cfg.dwell,priority:cfg.priority,known:true});}i++;continue;}
     if(isAddress(line)&&i+1<lines.length){var next=lines[i+1],vt=fuzzyMatch(next),cfg=VISIT_TYPES[vt];if(cfg){visits.push({address:line,visitType:vt,dwell:cfg.dwell,priority:cfg.priority,known:true});i+=2;continue;}}
     if(isVisitType(line)&&i+1<lines.length){var next=lines[i+1];if(isAddress(next)){var vt=fuzzyMatch(line),cfg=VISIT_TYPES[vt];visits.push({address:next,visitType:vt,dwell:cfg?cfg.dwell:0.5,priority:cfg?cfg.priority:3,known:!!cfg});i+=2;continue;}}
     i++;
@@ -554,12 +569,25 @@ function doCalendarAuth(sel){
 async function createEvents(sel){
   showMsg('calendarMsg','Adding events...','info');
   var tz=Intl.DateTimeFormat().resolvedOptions().timeZone,errors=0;
+  var total=includedVisits.length;
   for(var i=0;i<sel.length;i++){
     var v=sel[i];
+    var idx=includedVisits.indexOf(v);
+    var stopNum=(idx>=0?idx+1:i+1);
+    var next=(idx>=0&&idx+1<total)?includedVisits[idx+1]:null;
+    var nextLine=next
+      ? 'Next: Stop '+(idx+2)+' — '+next.visitType+' @ '+next.address+' (~'+next.estArrival+')'
+      : 'Final stop — return to '+(curEndAddr||'end point');
+    var desc='Stop '+stopNum+' of '+total+' · P'+v.priority+'\n'
+      +'Visit Type: '+v.visitType+'\n'
+      +'Dwell: '+dwellLabel(v.dwell)+'\n'
+      +'Arrive: '+v.estArrival+'\n'
+      +nextLine+'\n'
+      +'Route origin: '+(curStartAddr||'home')+' @ '+curStartTime;
     try{
       var r=await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events',{
         method:'POST',headers:{'Authorization':'Bearer '+calendarToken,'Content-Type':'application/json'},
-        body:JSON.stringify({summary:v.visitType+' — '+v.address,location:v.address,description:'Visit Type: '+v.visitType+'\nPriority: P'+v.priority+'\nDwell: '+dwellLabel(v.dwell),start:{dateTime:getCalDT(v.arrivalOffset,v.dwell,false),timeZone:tz},end:{dateTime:getCalDT(v.arrivalOffset,v.dwell,true),timeZone:tz}})
+        body:JSON.stringify({summary:stopNum+'. '+v.visitType+' — '+v.address,location:v.address,description:desc,start:{dateTime:getCalDT(v.arrivalOffset,v.dwell,false),timeZone:tz},end:{dateTime:getCalDT(v.arrivalOffset,v.dwell,true),timeZone:tz}})
       });
       if(!r.ok)errors++;
     }catch(e){errors++;}
